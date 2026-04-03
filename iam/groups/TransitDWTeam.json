@@ -1,0 +1,22 @@
+{
+  "GroupName": "TransitDWTeam",
+  "Members": [
+    "lingli_yang",
+    "minglei_ma",
+    "poojith"
+  ],
+  "AttachedPolicies": [
+    "arn:aws:iam::805699509606:policy/RedshiftDataAPIPolicy",
+    "arn:aws:iam::805699509606:policy/RedshiftDevPolicy",
+    "arn:aws:iam::aws:policy/AmazonRedshiftFullAccess",
+    "arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",
+    "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole",
+    "arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess",
+    "arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess",
+    "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess",
+    "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+    "arn:aws:iam::aws:policy/AmazonRedshiftQueryEditorV2FullAccess",
+    "arn:aws:iam::aws:policy/service-role/AwsGlueSessionUserRestrictedNotebookServiceRole"
+  ],
+  "Description": "DAMG 7370 project team — read/write access to Redshift, S3, Glue, DynamoDB, CloudWatch"
+}

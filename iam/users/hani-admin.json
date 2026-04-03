@@ -1,0 +1,9 @@
+{
+  "UserName": "hani-admin",
+  "Groups": [],
+  "AttachedPolicies": [
+    "arn:aws:iam::aws:policy/AdministratorAccess"
+  ],
+  "InlinePolicies": {},
+  "Description": "Project owner / admin — full account access"
+}

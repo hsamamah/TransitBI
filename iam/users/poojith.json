@@ -1,0 +1,30 @@
+{
+  "UserName": "poojith",
+  "Groups": ["TransitDWTeam"],
+  "AttachedPolicies": [
+    "arn:aws:iam::805699509606:policy/RedshiftS3Copy",
+    "arn:aws:iam::aws:policy/IAMFullAccess",
+    "arn:aws:iam::aws:policy/IAMUserChangePassword",
+    "arn:aws:iam::aws:policy/AmazonRedshiftQueryEditorV2ReadWriteSharing",
+    "arn:aws:iam::aws:policy/AmazonEventBridgeFullAccess",
+    "arn:aws:iam::aws:policy/AWSLambda_FullAccess"
+  ],
+  "InlinePolicies": {
+    "QuickSightCreateAdmin": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "quicksight:CreateAdmin",
+            "quicksight:CreateUser",
+            "quicksight:RegisterUser",
+            "quicksight:DescribeUser"
+          ],
+          "Resource": "*"
+        }
+      ]
+    }
+  },
+  "Description": "Team member — Redshift dev, Glue, EventBridge, Lambda, QuickSight"
+}

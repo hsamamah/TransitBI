@@ -1,0 +1,72 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "S3RawRead",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::seattle-transit-raw",
+                "arn:aws:s3:::seattle-transit-raw/*"
+            ]
+        },
+        {
+            "Sid": "S3StagingReadWrite",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::seattle-transit-staging",
+                "arn:aws:s3:::seattle-transit-staging/*"
+            ]
+        },
+        {
+            "Sid": "S3ProcessedReadWrite",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::seattle-transit-processed",
+                "arn:aws:s3:::seattle-transit-processed/*"
+            ]
+        },
+        {
+            "Sid": "GlueReadCatalog",
+            "Effect": "Allow",
+            "Action": [
+                "glue:GetTable",
+                "glue:GetTables",
+                "glue:GetDatabase",
+                "glue:GetDatabases",
+                "glue:GetPartition",
+                "glue:GetPartitions"
+            ],
+            "Resource": [
+                "arn:aws:glue:us-west-2:805699509606:catalog",
+                "arn:aws:glue:us-west-2:805699509606:database/*",
+                "arn:aws:glue:us-west-2:805699509606:table/*"
+            ]
+        },
+        {
+            "Sid": "CloudWatchLogs",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:GetLogEvents",
+                "logs:DescribeLogGroups"
+            ],
+            "Resource": "arn:aws:logs:us-west-2:805699509606:*"
+        }
+    ]
+}

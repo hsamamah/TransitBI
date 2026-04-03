@@ -1,0 +1,52 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "RedshiftQueryEditorV2",
+            "Effect": "Allow",
+            "Action": [
+                "sqlworkbench:CreateAccount",
+                "sqlworkbench:ListConnections",
+                "sqlworkbench:CreateConnection",
+                "sqlworkbench:GetConnection",
+                "sqlworkbench:ListDatabases"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "RedshiftServerless",
+            "Effect": "Allow",
+            "Action": [
+                "redshift-serverless:GetWorkgroup",
+                "redshift-serverless:GetNamespace",
+                "redshift-serverless:ListWorkgroups",
+                "redshift-serverless:ListNamespaces",
+                "redshift-data:ExecuteStatement",
+                "redshift-data:DescribeStatement",
+                "redshift-data:GetStatementResult",
+                "redshift-data:ListDatabases",
+                "redshift-data:ListSchemas",
+                "redshift-data:ListTables"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "S3FullAccess",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:ListBucket",
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::seattle-transit-raw",
+                "arn:aws:s3:::seattle-transit-raw/*",
+                "arn:aws:s3:::seattle-transit-staging",
+                "arn:aws:s3:::seattle-transit-staging/*",
+                "arn:aws:s3:::seattle-transit-processed",
+                "arn:aws:s3:::seattle-transit-processed/*"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,82 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "RedshiftDataAPIWorkgroup",
+            "Effect": "Allow",
+            "Action": [
+                "redshift-data:ExecuteStatement",
+                "redshift-serverless:GetCredentials"
+            ],
+            "Resource": "arn:aws:redshift-serverless:us-west-2:805699509606:workgroup/9a11dcff-2de8-4146-8d79-7d1e04102f80"
+        },
+        {
+            "Sid": "RedshiftDataAPIStatements",
+            "Effect": "Allow",
+            "Action": [
+                "redshift-data:DescribeStatement",
+                "redshift-data:GetStatementResult",
+                "redshift-data:ListStatements",
+                "redshift-data:CancelStatement"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "RedshiftServerlessRead",
+            "Effect": "Allow",
+            "Action": [
+                "redshift-serverless:GetWorkgroup",
+                "redshift-serverless:GetNamespace",
+                "redshift-serverless:ListWorkgroups",
+                "redshift-serverless:ListNamespaces"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "SecretsManagerRead",
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret"
+            ],
+            "Resource": "arn:aws:secretsmanager:us-west-2:805699509606:secret:transit/*"
+        },
+        {
+            "Sid": "CloudWatchLogs",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:GetLogEvents",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams"
+            ],
+            "Resource": "arn:aws:logs:us-west-2:805699509606:*"
+        },
+        {
+            "Sid": "GlueJobRead",
+            "Effect": "Allow",
+            "Action": [
+                "glue:GetJob",
+                "glue:GetJobRun",
+                "glue:GetJobRuns",
+                "glue:StartJobRun",
+                "glue:BatchStopJobRun"
+            ],
+            "Resource": "arn:aws:glue:us-west-2:805699509606:job/*"
+        },
+        {
+            "Sid": "DynamoDBPipeline",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:Query",
+                "dynamodb:Scan"
+            ],
+            "Resource": "arn:aws:dynamodb:us-west-2:805699509606:table/seattle-transit-pipeline"
+        }
+    ]
+}

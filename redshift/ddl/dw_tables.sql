@@ -200,6 +200,10 @@ CREATE TABLE IF NOT EXISTS dw.facttrip (
     dataqualityflag VARCHAR(30)
 );
 
+-- Note: views below were incorrectly extracted as tables by SVV_COLUMNS.
+-- The authoritative view definitions are in redshift/views/.
+-- These entries are kept for reference only and are not applied by deploy_redshift.sh.
+
 CREATE TABLE IF NOT EXISTS dw.v_missed_trip_rate_by_route (
     agencykey INTEGER,
     agencyname VARCHAR(200),

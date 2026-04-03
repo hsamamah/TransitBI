@@ -1,0 +1,18 @@
+{
+  "DataSourceId": "ee6148c5-7ba2-45b8-b4a5-c721e9ab7aca",
+  "Name": "seattle-transit-dw",
+  "Type": "REDSHIFT",
+  "DataSourceParameters": {
+    "RedshiftParameters": {
+      "Host": "team.805699509606.us-west-2.redshift-serverless.amazonaws.com",
+      "Port": 5439,
+      "Database": "dev"
+    }
+  },
+  "VpcConnectionProperties": {
+    "VpcConnectionArn": "arn:aws:quicksight:us-west-2:805699509606:vpcConnection/c9508d2a-f178-4add-a3fb-ba52ae4c742f"
+  },
+  "SslProperties": {
+    "DisableSsl": false
+  }
+}

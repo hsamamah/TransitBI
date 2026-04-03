@@ -1,0 +1,87 @@
+{
+  "DataSetId": "f866df43-50a4-492d-92f1-14901dee795d",
+  "Name": "v_voms",
+  "ImportMode": "SPICE",
+  "PhysicalTableMap": {
+    "90578b3d-b8a4-44b8-b7d8-4dfda8c4bd4c": {
+      "RelationalTable": {
+        "DataSourceArn": "arn:aws:quicksight:us-west-2:805699509606:datasource/ee6148c5-7ba2-45b8-b4a5-c721e9ab7aca",
+        "Schema": "dw",
+        "Name": "v_voms",
+        "InputColumns": [
+          {
+            "Name": "datekey",
+            "Id": "v_voms-datekey-a8289f",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "fulldate",
+            "Id": "v_voms-fulldate-2cdf0c",
+            "Type": "DATETIME"
+          },
+          {
+            "Name": "calendarmonth",
+            "Id": "v_voms-calendarm-bbf6ec",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "calendaryear",
+            "Id": "v_voms-calendary-425a32",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "federalfiscalmonth",
+            "Id": "v_voms-federalfi-8738c5",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "agencykey",
+            "Id": "v_voms-agencykey-5e9401",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "agencyname",
+            "Id": "v_voms-agencynam-1b37c7",
+            "Type": "STRING"
+          },
+          {
+            "Name": "mode",
+            "Id": "v_voms-mode-bbb5d1",
+            "Type": "STRING"
+          },
+          {
+            "Name": "peakvehiclecount",
+            "Id": "v_voms-peakvehic-8dc7a9",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "peaktimekey",
+            "Id": "v_voms-peaktimek-0c8141",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "peak_time",
+            "Id": "v_voms-peak_time-1e14bb",
+            "Type": "DATETIME"
+          },
+          {
+            "Name": "peak_period",
+            "Id": "v_voms-peak_peri-6b9b46",
+            "Type": "STRING"
+          },
+          {
+            "Name": "monthly_voms",
+            "Id": "v_voms-monthly_v-8401b8",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "ntd_period_voms",
+            "Id": "v_voms-ntd_perio-04e428",
+            "Type": "INTEGER"
+          }
+        ]
+      }
+    }
+  },
+  "LogicalTableMap": {}
+}

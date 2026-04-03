@@ -1,0 +1,80 @@
+{
+  "DataSetId": "6dbda19e-5a0c-4d02-a9fe-89b0dafecc60",
+  "Name": "v_routes_consistently_late",
+  "ImportMode": "SPICE",
+  "PhysicalTableMap": {
+    "eb1ba827-19ca-4668-9d83-da409c29dd23": {
+      "RelationalTable": {
+        "DataSourceArn": "arn:aws:quicksight:us-west-2:805699509606:datasource/ee6148c5-7ba2-45b8-b4a5-c721e9ab7aca",
+        "Schema": "dw",
+        "Name": "v_routes_consistently_late",
+        "InputColumns": [
+          {
+            "Name": "agencykey",
+            "Id": "v_routes_-agencykey-40acae",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "agencyname",
+            "Id": "v_routes_-agencynam-8a1dd2",
+            "Type": "STRING"
+          },
+          {
+            "Name": "mode",
+            "Id": "v_routes_-mode-591c51",
+            "Type": "STRING"
+          },
+          {
+            "Name": "routekey",
+            "Id": "v_routes_-routekey-5c68e9",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "routeid",
+            "Id": "v_routes_-routeid-3bc112",
+            "Type": "STRING"
+          },
+          {
+            "Name": "routeshortname",
+            "Id": "v_routes_-routeshor-e593d9",
+            "Type": "STRING"
+          },
+          {
+            "Name": "routelongname",
+            "Id": "v_routes_-routelong-eb4886",
+            "Type": "STRING"
+          },
+          {
+            "Name": "days_evaluated",
+            "Id": "v_routes_-days_eval-778f82",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "days_below_70pct",
+            "Id": "v_routes_-days_belo-5eba68",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "avg_otp_pct",
+            "Id": "v_routes_-avg_otp_p-e2a631",
+            "Type": "DECIMAL",
+            "SubType": "FIXED"
+          },
+          {
+            "Name": "worst_day_otp_pct",
+            "Id": "v_routes_-worst_day-a24bb9",
+            "Type": "DECIMAL",
+            "SubType": "FIXED"
+          },
+          {
+            "Name": "best_day_otp_pct",
+            "Id": "v_routes_-best_day_-4dcd92",
+            "Type": "DECIMAL",
+            "SubType": "FIXED"
+          }
+        ]
+      }
+    }
+  },
+  "LogicalTableMap": {}
+}

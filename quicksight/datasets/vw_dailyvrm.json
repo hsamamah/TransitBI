@@ -1,0 +1,75 @@
+{
+  "DataSetId": "c0894c19-2b88-448a-883a-ce164057421e",
+  "Name": "vw_dailyvrm",
+  "ImportMode": "SPICE",
+  "PhysicalTableMap": {
+    "4a0c3b3c-ae6e-471e-94b5-cfee7770e064": {
+      "RelationalTable": {
+        "DataSourceArn": "arn:aws:quicksight:us-west-2:805699509606:datasource/ee6148c5-7ba2-45b8-b4a5-c721e9ab7aca",
+        "Schema": "dw",
+        "Name": "vw_dailyvrm",
+        "InputColumns": [
+          {
+            "Name": "agencykey",
+            "Id": "vw_dailyv-agencykey-b9db21",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "agencyname",
+            "Id": "vw_dailyv-agencynam-be6caa",
+            "Type": "STRING"
+          },
+          {
+            "Name": "mode",
+            "Id": "vw_dailyv-mode-75622f",
+            "Type": "STRING"
+          },
+          {
+            "Name": "fulldate",
+            "Id": "vw_dailyv-fulldate-63f0b5",
+            "Type": "DATETIME"
+          },
+          {
+            "Name": "calendaryear",
+            "Id": "vw_dailyv-calendary-5e40f2",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "calendarmonth",
+            "Id": "vw_dailyv-calendarm-209ec2",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "federalfiscalmonth",
+            "Id": "vw_dailyv-federalfi-66f935",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "reportedvrm",
+            "Id": "vw_dailyv-reportedv-1cd58e",
+            "Type": "DECIMAL",
+            "SubType": "FIXED"
+          },
+          {
+            "Name": "estimatedvrm",
+            "Id": "vw_dailyv-estimated-6e0631",
+            "Type": "DECIMAL",
+            "SubType": "FIXED"
+          },
+          {
+            "Name": "total_vrm_including_estimated",
+            "Id": "vw_dailyv-total_vrm-c90950",
+            "Type": "DECIMAL",
+            "SubType": "FIXED"
+          },
+          {
+            "Name": "isofficial",
+            "Id": "vw_dailyv-isofficia-8ae0d2",
+            "Type": "BIT"
+          }
+        ]
+      }
+    }
+  },
+  "LogicalTableMap": {}
+}

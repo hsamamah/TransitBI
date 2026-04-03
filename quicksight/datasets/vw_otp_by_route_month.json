@@ -1,0 +1,88 @@
+{
+  "DataSetId": "61f642a5-d9a8-4d26-b485-73f5d5615069",
+  "Name": "vw_otp_by_route_month",
+  "ImportMode": "SPICE",
+  "PhysicalTableMap": {
+    "183375e3-4454-48c8-9071-d503ed6858f7": {
+      "RelationalTable": {
+        "DataSourceArn": "arn:aws:quicksight:us-west-2:805699509606:datasource/ee6148c5-7ba2-45b8-b4a5-c721e9ab7aca",
+        "Schema": "dw",
+        "Name": "vw_otp_by_route_month",
+        "InputColumns": [
+          {
+            "Name": "agencykey",
+            "Id": "vw_otp_by-agencykey-65a8cc",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "agencyname",
+            "Id": "vw_otp_by-agencynam-a82a99",
+            "Type": "STRING"
+          },
+          {
+            "Name": "mode",
+            "Id": "vw_otp_by-mode-f2be28",
+            "Type": "STRING"
+          },
+          {
+            "Name": "routekey",
+            "Id": "vw_otp_by-routekey-9816a9",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "routeid",
+            "Id": "vw_otp_by-routeid-bb3ac7",
+            "Type": "STRING"
+          },
+          {
+            "Name": "routeshortname",
+            "Id": "vw_otp_by-routeshor-9388a5",
+            "Type": "STRING"
+          },
+          {
+            "Name": "routelongname",
+            "Id": "vw_otp_by-routelong-a70d88",
+            "Type": "STRING"
+          },
+          {
+            "Name": "calendaryear",
+            "Id": "vw_otp_by-calendary-457542",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "calendarmonth",
+            "Id": "vw_otp_by-calendarm-b990cd",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "total_obs",
+            "Id": "vw_otp_by-total_obs-ee9709",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "ontime",
+            "Id": "vw_otp_by-ontime-b7a94e",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "late",
+            "Id": "vw_otp_by-late-b87776",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "early",
+            "Id": "vw_otp_by-early-46daa5",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "otp_pct",
+            "Id": "vw_otp_by-otp_pct-26a274",
+            "Type": "DECIMAL",
+            "SubType": "FIXED"
+          }
+        ]
+      }
+    }
+  },
+  "LogicalTableMap": {}
+}

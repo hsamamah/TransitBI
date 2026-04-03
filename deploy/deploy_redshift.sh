@@ -39,6 +39,7 @@ done
 
 log()  { echo "[$(date '+%H:%M:%S')] $*"; }
 ok()   { echo "[$(date '+%H:%M:%S')] ✓ $*"; }
+warn() { echo "[$(date '+%H:%M:%S')] ⚠ $*"; }
 dry()  { echo "[$(date '+%H:%M:%S')] DRY-RUN SQL:"; echo "$1"; echo "---"; }
 
 POLL_TIMEOUT=120
@@ -107,8 +108,6 @@ run_sql_file() {
     sql=$(cat "${filepath}")
     run_sql "${sql}" "${desc}"
 }
-
-warn() { echo "[$(date '+%H:%M:%S')] ⚠ $*"; }
 
 SQL_DIR="${SCRIPT_DIR}/../redshift"
 

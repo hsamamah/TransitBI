@@ -19,8 +19,11 @@ seattle-transit-dw/
 │   ├── gtfs-rt-polling/    # RT feed poller (EventBridge → S3)
 │   └── gtfs-pipeline-notification/ # SNS/email alerting
 ├── redshift/
-│   ├── ddl/                # CREATE TABLE statements
+│   ├── ddl/                # CREATE TABLE statements (stg, dim, fact)
 │   └── views/              # BI layer SQL views
+├── quicksight/
+│   ├── data-sources/       # Redshift data source config
+│   └── datasets/           # 6 SPICE dataset definitions (one per BI view)
 ├── iam/                    # IAM role trust + policy JSON
 ├── eventbridge/            # EventBridge rule definitions
 ├── .env.example            # Secret variable template (copy to .env)
@@ -29,7 +32,8 @@ seattle-transit-dw/
     ├── deploy_all.sh       # Master deploy — runs all scripts in order
     ├── deploy_iam.sh       # IAM roles + policies
     ├── deploy_redshift.sh  # Redshift DDL + views
-    └── deploy_glue.sh      # Glue jobs + workflows + triggers
+    ├── deploy_glue.sh      # Glue jobs + workflows + triggers
+    └── deploy_quicksight.sh # QuickSight data source, datasets, SPICE refresh
 ```
 
 ---
@@ -69,8 +73,10 @@ bash deploy/deploy_all.sh --glue-only
 bash deploy/deploy_iam.sh
 bash deploy/deploy_redshift.sh
 bash deploy/deploy_glue.sh
-bash deploy/deploy_glue.sh --upload-only   # upload scripts to S3 only
-bash deploy/deploy_redshift.sh --views-only # redeploy views only
+bash deploy/deploy_quicksight.sh
+bash deploy/deploy_glue.sh --upload-only        # upload scripts to S3 only
+bash deploy/deploy_redshift.sh --views-only     # redeploy views only
+bash deploy/deploy_quicksight.sh --refresh-only # trigger SPICE refresh only
 ```
 
 ---
@@ -105,7 +111,7 @@ EventBridge (cron)
 | S3 | seattle-transit-raw/staging/processed | Data lake |
 | DynamoDB | seattle-transit-pipeline | Pipeline parameter store |
 | EventBridge | gtfs-rt-polling-schedule | Polling trigger |
-| QuickSight | 6 datasets | BI dashboards |
+| QuickSight | 1 data source, 6 SPICE datasets, 1 dashboard | BI dashboards |
 
 ---
 

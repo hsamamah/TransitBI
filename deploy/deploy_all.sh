@@ -7,12 +7,13 @@
 # Usage:
 #   bash deploy/deploy_all.sh              # full deploy
 #   bash deploy/deploy_all.sh --dry-run    # print changes only
-#   bash deploy/deploy_all.sh --glue-only  # skip IAM + Redshift
+#   bash deploy/deploy_all.sh --glue-only  # Glue only (skip IAM/Redshift/QuickSight)
 #
 # Dependency order:
 #   1. IAM roles + policies  (other resources reference these)
 #   2. Redshift DDL + views  (fact jobs write to these tables)
 #   3. Glue jobs + triggers  (reads IAM + Redshift)
+#   4. QuickSight datasets   (reads from Redshift views, triggers SPICE refresh)
 # =============================================================
 
 set -euo pipefail
@@ -45,6 +46,11 @@ fi
 
 log "STEP 3 — Glue"
 bash "${SCRIPT_DIR}/deploy_glue.sh" "${ARGS[@]+"${ARGS[@]}"}"
+
+if ! $GLUE_ONLY; then
+    log "STEP 4 — QuickSight"
+    bash "${SCRIPT_DIR}/deploy_quicksight.sh" "${ARGS[@]+"${ARGS[@]}"}"
+fi
 
 END=$(date +%s)
 ELAPSED=$((END - START))

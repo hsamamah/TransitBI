@@ -1,0 +1,93 @@
+{
+  "DataSetId": "3eac6ed8-921c-4584-be0c-3a6a8c377027",
+  "Name": "v_missed_trip_rate_by_route",
+  "ImportMode": "SPICE",
+  "PhysicalTableMap": {
+    "59c98580-5415-4e67-a74a-37588054e86d": {
+      "RelationalTable": {
+        "DataSourceArn": "arn:aws:quicksight:us-west-2:805699509606:datasource/ee6148c5-7ba2-45b8-b4a5-c721e9ab7aca",
+        "Schema": "dw",
+        "Name": "v_missed_trip_rate_by_route",
+        "InputColumns": [
+          {
+            "Name": "agencykey",
+            "Id": "v_missed_-agencykey-d7e394",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "agencyname",
+            "Id": "v_missed_-agencynam-5c4ccd",
+            "Type": "STRING"
+          },
+          {
+            "Name": "mode",
+            "Id": "v_missed_-mode-d28153",
+            "Type": "STRING"
+          },
+          {
+            "Name": "routekey",
+            "Id": "v_missed_-routekey-c44dd8",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "routeid",
+            "Id": "v_missed_-routeid-123c77",
+            "Type": "STRING"
+          },
+          {
+            "Name": "routeshortname",
+            "Id": "v_missed_-routeshor-5bb700",
+            "Type": "STRING"
+          },
+          {
+            "Name": "routelongname",
+            "Id": "v_missed_-routelong-8d2aa8",
+            "Type": "STRING"
+          },
+          {
+            "Name": "fulldate",
+            "Id": "v_missed_-fulldate-9b5a1b",
+            "Type": "DATETIME"
+          },
+          {
+            "Name": "calendarmonth",
+            "Id": "v_missed_-calendarm-0efa50",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "calendaryear",
+            "Id": "v_missed_-calendary-9ae379",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "total_scheduled_trips",
+            "Id": "v_missed_-total_sch-bd6769",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "operated_trips",
+            "Id": "v_missed_-operated_-4e887a",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "missed_trips",
+            "Id": "v_missed_-missed_tr-92e2d3",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "cancelled_trips",
+            "Id": "v_missed_-cancelled-eb7428",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "missed_trip_rate_pct",
+            "Id": "v_missed_-missed_tr-093714",
+            "Type": "DECIMAL",
+            "SubType": "FIXED"
+          }
+        ]
+      }
+    }
+  },
+  "LogicalTableMap": {}
+}

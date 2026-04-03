@@ -1,0 +1,75 @@
+{
+  "DataSetId": "2ade677c-c1c3-4f1f-ad94-a2d24fa66421",
+  "Name": "vw_dailyvrh",
+  "ImportMode": "SPICE",
+  "PhysicalTableMap": {
+    "ee62ea25-5d9d-49b7-8b06-09a938432b88": {
+      "RelationalTable": {
+        "DataSourceArn": "arn:aws:quicksight:us-west-2:805699509606:datasource/ee6148c5-7ba2-45b8-b4a5-c721e9ab7aca",
+        "Schema": "dw",
+        "Name": "vw_dailyvrh",
+        "InputColumns": [
+          {
+            "Name": "agencykey",
+            "Id": "vw_dailyv-agencykey-e0bf47",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "agencyname",
+            "Id": "vw_dailyv-agencynam-c3cddf",
+            "Type": "STRING"
+          },
+          {
+            "Name": "mode",
+            "Id": "vw_dailyv-mode-c8ffa2",
+            "Type": "STRING"
+          },
+          {
+            "Name": "fulldate",
+            "Id": "vw_dailyv-fulldate-22c785",
+            "Type": "DATETIME"
+          },
+          {
+            "Name": "calendaryear",
+            "Id": "vw_dailyv-calendary-abf4fc",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "calendarmonth",
+            "Id": "vw_dailyv-calendarm-06f2fc",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "federalfiscalmonth",
+            "Id": "vw_dailyv-federalfi-ded588",
+            "Type": "INTEGER"
+          },
+          {
+            "Name": "reportedvrh",
+            "Id": "vw_dailyv-reportedv-ab1835",
+            "Type": "DECIMAL",
+            "SubType": "FIXED"
+          },
+          {
+            "Name": "estimatedvrh",
+            "Id": "vw_dailyv-estimated-ce9063",
+            "Type": "DECIMAL",
+            "SubType": "FIXED"
+          },
+          {
+            "Name": "total_vrh_including_estimated",
+            "Id": "vw_dailyv-total_vrh-2f5d94",
+            "Type": "DECIMAL",
+            "SubType": "FIXED"
+          },
+          {
+            "Name": "isofficial",
+            "Id": "vw_dailyv-isofficia-ca7697",
+            "Type": "BIT"
+          }
+        ]
+      }
+    }
+  },
+  "LogicalTableMap": {}
+}

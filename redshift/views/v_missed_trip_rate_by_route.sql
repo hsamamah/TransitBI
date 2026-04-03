@@ -1,0 +1,6 @@
+-- View: dw.v_missed_trip_rate_by_route
+-- Extracted from Redshift Serverless workgroup: team, database: dev
+-- Extracted: 2026-04-03
+
+CREATE OR REPLACE VIEW dw.v_missed_trip_rate_by_route AS
+SELECT ft.agencykey, a.agencyname, a."mode", ft.routekey, dr.routeid, dr.routeshortname, dr.routelongname, dd.fulldate, dd.calendarmonth, dd.calendaryear, count(*) AS total_scheduled_trips, sum(CASE WHEN ((ft.tripstatus)::text = 'OPERATED'::text) THEN 1 ELSE 0 END) AS operated_trips, sum(CASE WHEN ((ft.tripstatus)::text = 'MISSED'::text) THEN 1 ELSE 0 END) AS missed_trips, sum(CASE WHEN ((ft.tripstatus)::text = 'CANCELLED'::text) THEN 1 ELSE 0 END) AS cancelled_trips, round(((100.0 * ((sum(CASE WHEN ((ft.tripstatus)::text = 'MISSED'::text) THEN 1 ELSE 0 END))::numeric)::numeric(18,0)) / ((CASE WHEN (count(*) = 0) THEN NULL::bigint ELSE count(*) END)::numeric)::numeric(18,0)), 2) AS missed_trip_rate_pct FROM (((dw.facttrip ft JOIN dw.dimroute dr ON ((dr.routekey = ft.routekey))) JOIN dw.dimagency a ON ((a.agencykey = ft.agencykey))) JOIN dw.dimdate dd ON ((dd.datekey = ft.datekey))) GROUP BY ft.agencykey, a.agencyname, a."mode", ft.routekey, dr.routeid, dr.routeshortname, dr.routelongname, dd.fulldate, dd.calendarmonth, dd.calendaryear;;

@@ -46,8 +46,14 @@ POLL_TIMEOUT=120
 POLL_INTERVAL=5
 
 run_sql() {
+    # run_sql SQL DESC [--warn-on-fail]
+    # --warn-on-fail: log a warning instead of exiting on failure.
+    # Used for DDL steps (CREATE SCHEMA/TABLE IF NOT EXISTS) where the
+    # IAM caller may lack CREATE privilege but the objects already exist.
     local sql="$1"
     local desc="${2:-SQL}"
+    local warn_on_fail=false
+    [[ "${3:-}" == "--warn-on-fail" ]] && warn_on_fail=true
 
     if $DRY_RUN; then
         dry "${sql}"
@@ -88,6 +94,10 @@ run_sql() {
             FAILED|ABORTED)
                 local err
                 err=$(echo "${status_resp}" | python3 -c "import json,sys; print(json.load(sys.stdin).get('Error','no detail'))")
+                if $warn_on_fail; then
+                    warn "${desc} skipped (no permission — object likely already exists): ${err}"
+                    return
+                fi
                 echo "[ERROR] ${desc} FAILED: ${err}"
                 exit 1 ;;
         esac
@@ -100,13 +110,14 @@ run_sql() {
 run_sql_file() {
     local filepath="$1"
     local desc="${2:-$(basename ${filepath})}"
+    local extra="${3:-}"
     if [[ ! -f "${filepath}" ]]; then
         warn "SQL file not found: ${filepath} — skipping"
         return
     fi
     local sql
     sql=$(cat "${filepath}")
-    run_sql "${sql}" "${desc}"
+    run_sql "${sql}" "${desc}" "${extra}"
 }
 
 SQL_DIR="${SCRIPT_DIR}/../redshift"
@@ -116,8 +127,8 @@ SQL_DIR="${SCRIPT_DIR}/../redshift"
 # =============================================================
 if ! $VIEWS_ONLY; then
     log "=== [1] Schemas ==="
-    run_sql "CREATE SCHEMA IF NOT EXISTS stg;" "CREATE SCHEMA stg"
-    run_sql "CREATE SCHEMA IF NOT EXISTS dw;"  "CREATE SCHEMA dw"
+    run_sql "CREATE SCHEMA IF NOT EXISTS stg;" "CREATE SCHEMA stg" "--warn-on-fail"
+    run_sql "CREATE SCHEMA IF NOT EXISTS dw;"  "CREATE SCHEMA dw"  "--warn-on-fail"
 fi
 
 # =============================================================
@@ -125,7 +136,7 @@ fi
 # =============================================================
 if ! $VIEWS_ONLY; then
     log "=== [2] Staging tables ==="
-    run_sql_file "${SQL_DIR}/ddl/stg_tables.sql" "Staging tables DDL"
+    run_sql_file "${SQL_DIR}/ddl/stg_tables.sql" "Staging tables DDL" "--warn-on-fail"
 fi
 
 # =============================================================
@@ -133,7 +144,7 @@ fi
 # =============================================================
 if ! $VIEWS_ONLY; then
     log "=== [3] Dimension tables ==="
-    run_sql_file "${SQL_DIR}/ddl/dim_tables.sql" "Dimension tables DDL"
+    run_sql_file "${SQL_DIR}/ddl/dim_tables.sql" "Dimension tables DDL" "--warn-on-fail"
 fi
 
 # =============================================================
@@ -141,7 +152,7 @@ fi
 # =============================================================
 if ! $VIEWS_ONLY; then
     log "=== [4] Fact tables ==="
-    run_sql_file "${SQL_DIR}/ddl/fact_tables.sql" "Fact tables DDL"
+    run_sql_file "${SQL_DIR}/ddl/fact_tables.sql" "Fact tables DDL" "--warn-on-fail"
 fi
 
 # =============================================================
@@ -157,7 +168,7 @@ for view_file in \
     "v_missed_trip_rate_by_route.sql" \
     "v_routes_consistently_late.sql" \
     "v_voms.sql"; do
-    run_sql_file "${VIEWS_DIR}/${view_file}" "View: ${view_file%.sql}"
+    run_sql_file "${VIEWS_DIR}/${view_file}" "View: ${view_file%.sql}" "--warn-on-fail"
 done
 
 # =============================================================
@@ -168,21 +179,21 @@ if ! $VIEWS_ONLY; then
 
     # Glue ETL role
     run_sql "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA stg TO \"IAMR:TransitGlueRole\";" \
-        "GRANT stg to TransitGlueRole"
+        "GRANT stg to TransitGlueRole" "--warn-on-fail"
     run_sql "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dw  TO \"IAMR:TransitGlueRole\";" \
-        "GRANT dw to TransitGlueRole"
+        "GRANT dw to TransitGlueRole" "--warn-on-fail"
 
     # Default privileges for future tables
     run_sql "ALTER DEFAULT PRIVILEGES IN SCHEMA stg GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO \"IAMR:TransitGlueRole\";" \
-        "Default privileges stg"
+        "Default privileges stg" "--warn-on-fail"
     run_sql "ALTER DEFAULT PRIVILEGES IN SCHEMA dw  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO \"IAMR:TransitGlueRole\";" \
-        "Default privileges dw"
+        "Default privileges dw" "--warn-on-fail"
 
     # QuickSight read-only user
     run_sql "GRANT SELECT ON ALL TABLES IN SCHEMA dw TO quicksight_user;" \
-        "GRANT dw SELECT to quicksight_user"
+        "GRANT dw SELECT to quicksight_user" "--warn-on-fail"
     run_sql "ALTER DEFAULT PRIVILEGES IN SCHEMA dw GRANT SELECT ON TABLES TO quicksight_user;" \
-        "Default privileges dw quicksight_user"
+        "Default privileges dw quicksight_user" "--warn-on-fail"
 fi
 
 log "=== Redshift deploy complete ==="

@@ -1,0 +1,12 @@
+{
+  "Name": "gtfs-rt-polling-schedule",
+  "ScheduleExpression": "rate(1 minute)",
+  "State": "ENABLED",
+  "Description": "Triggers gtfs-rt-polling Lambda every minute to poll RT feed",
+  "Targets": [
+    {
+      "Id": "l6rz2j4j4sf6cu2db8eh",
+      "Arn": "arn:aws:lambda:us-west-2:805699509606:function:gtfs-rt-polling"
+    }
+  ]
+}

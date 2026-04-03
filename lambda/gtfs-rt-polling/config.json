@@ -1,0 +1,16 @@
+{
+  "FunctionName": "gtfs-rt-polling",
+  "Runtime": "python3.14",
+  "Handler": "lambda_function.lambda_handler",
+  "MemorySize": 128,
+  "Timeout": 90,
+  "Environment": {
+    "Variables": {
+      "S3_BUCKET": "seattle-transit-raw",
+      "OBA_API_KEY": "${OBA_API_KEY}"
+    }
+  },
+  "Layers": [],
+  "Role": "arn:aws:iam::805699509606:role/service-role/gtfs-rt-polling-role-yidahmf4",
+  "Description": ""
+}

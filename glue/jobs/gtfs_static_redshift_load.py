@@ -2,8 +2,10 @@ import sys
 import boto3
 import logging
 import time
+from datetime import datetime
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
+from awsglue.utils import getResolvedOptions
 
 # Setup
 sc = SparkContext()
@@ -16,9 +18,18 @@ redshift_data = boto3.client('redshift-data', region_name='us-west-2')
 
 # ── Config ────────────────────────────────────────────────────────────────────
 STAGING_BUCKET = 'seattle-transit-staging'
-IAM_ROLE       = 'arn:aws:iam::805699509606:role/RedshiftS3CopyRole'
 WORKGROUP_NAME = 'team'
 REDSHIFT_DB    = 'dev'
+
+# IAM role ARN for Redshift COPY — injected as Glue job parameter --iam_role
+try:
+    _args = getResolvedOptions(sys.argv, ['iam_role'])
+    IAM_ROLE = _args['iam_role']
+except Exception:
+    raise RuntimeError(
+        "Missing required Glue job parameter --iam_role. "
+        "Set it in DefaultArguments (deploy_glue.sh sets this automatically)."
+    )
 
 # Tables to load — values are the stg DDL columns we actually want to accept.
 # Any column in the file but NOT in this set is silently ignored via the
@@ -84,6 +95,17 @@ STG_COLUMNS = {
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def get_latest_date_prefix():
+    """
+    Return the most recent staged S3 prefix under gtfs-static/combined/.
+    Verifies the latest prefix matches today's date — if it doesn't, the
+    ingestion job likely failed or used a fallback, and this job fails loudly
+    rather than silently loading the wrong date's data.
+    """
+    today_prefix = (
+        'gtfs-static/combined/'
+        + datetime.utcnow().strftime('%Y/%m/%d') + '/'
+    )
+
     paginator = s3.get_paginator('list_objects_v2')
     prefixes = []
     for page in paginator.paginate(
@@ -111,7 +133,15 @@ def get_latest_date_prefix():
 
     prefixes.sort(reverse=True)
     latest = prefixes[0]
-    logger.info(f'Latest staged prefix: {latest}')
+
+    if latest != today_prefix:
+        raise Exception(
+            f"Latest staged prefix ({latest}) does not match today's expected "
+            f"prefix ({today_prefix}). Ingestion may have failed or used a "
+            f"fallback. Aborting load to avoid loading stale data silently."
+        )
+
+    logger.info(f'Staging prefix verified for today: {latest}')
     return latest
 
 

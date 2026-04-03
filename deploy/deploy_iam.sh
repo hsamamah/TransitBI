@@ -33,7 +33,7 @@ run() {
     if $DRY_RUN; then
         echo "[$(date '+%H:%M:%S')] DRY-RUN: ${2:-$1}"
     else
-        eval "$1"
+        bash -c "$1"
     fi
 }
 

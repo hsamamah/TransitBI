@@ -24,6 +24,7 @@ from datetime import datetime, timezone
 
 import requests
 import boto3
+from awsglue.utils import getResolvedOptions
 from google.transit import gtfs_realtime_pb2
 
 # ============================================================
@@ -33,9 +34,20 @@ from google.transit import gtfs_realtime_pb2
 AWS_REGION = "us-west-2"
 S3_BUCKET_RAW = "seattle-transit-raw"
 
-OBA_API_KEY = "TEST"
-_BASE = "http://api.pugetsound.onebusaway.org/api/gtfs_realtime"
+# API key read from Glue job parameter --oba_api_key
+# Set this in the Glue job DefaultArguments or pass at runtime.
+try:
+    _args = getResolvedOptions(sys.argv, ['oba_api_key'])
+    OBA_API_KEY = _args['oba_api_key']
+except Exception:
+    raise RuntimeError(
+        "Missing required Glue job parameter --oba_api_key. "
+        "Set it in DefaultArguments or pass at job invocation."
+    )
 
+_BASE = "https://api.pugetsound.onebusaway.org/api/gtfs_realtime"
+
+# URLs are built here after the key is resolved — not at import time
 AGENCY_FEEDS = {
     "king-county-metro": {
         "agency_id": "1",

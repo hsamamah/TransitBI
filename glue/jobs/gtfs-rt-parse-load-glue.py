@@ -18,7 +18,7 @@ Path convention (staging bucket):
 Redshift:
   Workgroup : team
   Database  : dev
-  IAM Role  : arn:aws:iam::805699509606:role/RedshiftS3CopyRole
+  IAM Role  : injected via --iam_role job parameter (RedshiftS3CopyRole)
 
 Schedule: Daily at 07:00 AM PST via EventBridge (processes previous day)
 
@@ -47,8 +47,17 @@ STAGING_BUCKET  = 'seattle-transit-staging'
 REGION          = 'us-west-2'
 WORKGROUP       = 'team'
 DATABASE        = 'dev'
-IAM_ROLE        = 'arn:aws:iam::805699509606:role/RedshiftS3CopyRole'
 LOCAL_TZ        = pytz.timezone('America/Los_Angeles')
+
+# IAM role ARN for Redshift COPY — injected as Glue job parameter --iam_role
+try:
+    _base_args = getResolvedOptions(sys.argv, ['iam_role'])
+    IAM_ROLE = _base_args['iam_role']
+except Exception:
+    raise RuntimeError(
+        "Missing required Glue job parameter --iam_role. "
+        "Set it in DefaultArguments (deploy_glue.sh sets this automatically)."
+    )
 
 # Poll timeout for Redshift Data API (seconds)
 REDSHIFT_POLL_TIMEOUT = 300

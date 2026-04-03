@@ -57,7 +57,7 @@ run() {
     if $DRY_RUN; then
         dry "${desc:-$1}"
     else
-        eval "$1"
+        bash -c "$1"
     fi
 }
 
@@ -255,7 +255,7 @@ upload_script "${LIB_DIR}/pipeline_param_reader_v2.py" \
 upload_script "${JOBS_DIR}/gtfs_static_ingestion.py"         "${SCRIPTS}/gtfs_static_ingestion.py"
 upload_script "${JOBS_DIR}/gtfs_static_validation.py"        "${SCRIPTS}/gtfs_static_validation.py"
 upload_script "${JOBS_DIR}/gtfs_static_redshift_load.py"     "${SCRIPTS}/gtfs_static_redshift_load.py"
-upload_script "${JOBS_DIR}/gtfs_rt_parse_load.py"            "${SCRIPTS}/gtfs_rt_parse_load.py"
+upload_script "${JOBS_DIR}/gtfs-rt-parse-load-glue.py"        "${SCRIPTS}/gtfs-rt-parse-load-glue.py"
 upload_script "${JOBS_DIR}/transit_pipeline_inspector_v2.py" "${SCRIPTS}/transit_pipeline_inspector_v2.py"
 upload_script "${JOBS_DIR}/factstop_skeleton_and_merge_v2.py" "${SCRIPTS}/factstop_skeleton_and_merge_v2.py"
 upload_script "${JOBS_DIR}/facttrip_skeleton_and_merge_v2.py" "${SCRIPTS}/facttrip_skeleton_and_merge_v2.py"
@@ -286,13 +286,15 @@ upsert_glue_job \
 upsert_glue_job \
     "gtfs-static-redshift-load" \
     "${SCRIPTS}/gtfs_static_redshift_load.py" \
-    2 60
+    2 60 \
+    "\"--iam_role\": \"${REDSHIFT_COPY_ROLE}\""
 
 # gtfs-rt-daily-pipeline jobs
 upsert_glue_job \
     "gtfs-rt-parse-load-glue" \
-    "${SCRIPTS}/gtfs_rt_parse_load.py" \
-    10 60
+    "${SCRIPTS}/gtfs-rt-parse-load-glue.py" \
+    10 60 \
+    "\"--iam_role\": \"${REDSHIFT_COPY_ROLE}\""
 
 upsert_glue_job \
     "transit-pipeline-inspector" \

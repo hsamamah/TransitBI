@@ -14,12 +14,16 @@ into an AWS-hosted dimensional model, ending in QuickSight BI dashboards.
 seattle-transit-dw/
 ├── glue/
 │   ├── jobs/               # All Glue ETL scripts
-│   └── lib/                # Shared Python libraries
+│   └── lib/                # Shared Python libraries (pipeline_param_reader_v2)
+├── lambda/
+│   ├── gtfs-rt-polling/    # RT feed poller (EventBridge → S3)
+│   └── gtfs-pipeline-notification/ # SNS/email alerting
 ├── redshift/
 │   ├── ddl/                # CREATE TABLE statements
 │   └── views/              # BI layer SQL views
 ├── iam/                    # IAM role trust + policy JSON
 ├── eventbridge/            # EventBridge rule definitions
+├── .env.example            # Secret variable template (copy to .env)
 └── deploy/
     ├── config.env          # Centralized project config (no secrets)
     ├── deploy_all.sh       # Master deploy — runs all scripts in order
@@ -109,6 +113,19 @@ EventBridge (cron)
 
 All environment-specific values live in `deploy/config.env`.
 No secrets — AWS credentials come from CLI profile or IAM role at runtime.
+
+### Secrets setup
+
+Secrets are stored in `.env` (git-ignored). Before deploying Lambda functions:
+
+```bash
+cp .env.example .env
+# edit .env and fill in real values
+```
+
+| Variable | Used by | Where to get it |
+|----------|---------|-----------------|
+| `OBA_API_KEY` | `gtfs-rt-polling` Lambda | OneBusAway API key from transitapp.onebusaway.org |
 
 To change script version (e.g. after breaking changes):
 1. Update `SCRIPT_VERSION` in `config.env`

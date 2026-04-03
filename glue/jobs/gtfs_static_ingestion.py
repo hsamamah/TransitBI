@@ -124,15 +124,17 @@ def populate_dim_feed_version(new_hash: str, staged_files: list, feed_info: dict
     def _d(v):
         return f"'{v}'" if v else 'NULL'
 
-    # Flip all existing rows to IsCurrent = FALSE before inserting new one
-    _run_query("""
+    # Flip all existing rows to IsCurrent = FALSE and insert new row atomically.
+    # Both statements are sent in a single execute_statement call so Redshift
+    # treats them as one transaction — a crash between them cannot leave all
+    # rows with IsCurrent = FALSE and no current row.
+    _run_query(f"""
+        BEGIN;
+
         UPDATE dw.dimfeedversion
         SET    iscurrent = FALSE
-        WHERE  iscurrent = TRUE
-    """)
+        WHERE  iscurrent = TRUE;
 
-    # IDENTITY(0,1) assigns the key — no need to supply it
-    _run_query(f"""
         INSERT INTO dw.dimfeedversion (
             feedhash, sourceurl, ingestedat,
             feedstartdate, feedenddate, feedpublishername,
@@ -142,7 +144,9 @@ def populate_dim_feed_version(new_hash: str, staged_files: list, feed_info: dict
             {_d(feed_info.get('feed_start_date'))}, {_d(feed_info.get('feed_end_date'))},
             {_s(feed_info.get('feed_publisher_name'))}, {_s(feed_info.get('feed_version'))},
             {len(staged_files)}, TRUE, TRUE, 'Inserted by gtfs-static-ingestion job'
-        )
+        );
+
+        COMMIT;
     """)
 
     # Fetch the VersionKey IDENTITY assigned
@@ -445,7 +449,10 @@ except Exception as e:
 
     if fallback_success:
         record_fallback_event(fallback_date=fallback_date, reason=str(e))
-        logger.warning("Fallback succeeded — pipeline can continue with yesterday's data")
+        logger.warning("Fallback succeeded — downstream jobs will use yesterday's data")
     else:
         logger.error("Fallback failed — no data available for today")
-        raise
+
+    # Always re-raise so the Glue workflow sees FAILED and does not
+    # silently proceed with stale data as if today's ingestion succeeded.
+    raise

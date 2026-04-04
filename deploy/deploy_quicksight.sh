@@ -96,15 +96,9 @@ if ! $REFRESH_ONLY; then
     if $DRY_RUN; then
         dry "UPSERT data source: ${DATASOURCE_ID} (seattle-transit-dw)"
     elif qs_datasource_exists "${DATASOURCE_ID}"; then
-        aws quicksight update-data-source \
-            --aws-account-id "${ACCOUNT}" \
-            --data-source-id "${DATASOURCE_ID}" \
-            --name "seattle-transit-dw" \
-            --data-source-parameters "${DS_PARAMS}" \
-            --vpc-connection-properties "${VPC_PROPS}" \
-            --ssl-properties '{"DisableSsl": false}' \
-            --region "${REGION}" > /dev/null
-        ok "Updated data source: seattle-transit-dw"
+        # update-data-source requires credentials even for IAM/VPC sources and
+        # rejects them if set incorrectly — skip update since host/port/DB never change.
+        ok "Data source exists (no update needed): seattle-transit-dw"
     else
         aws quicksight create-data-source \
             --aws-account-id "${ACCOUNT}" \
@@ -148,9 +142,11 @@ if ! $REFRESH_ONLY; then
 
         dataset_id="${DATASET_IDS[$view_name]}"
         config_file="${QS_DIR}/datasets/${view_name}.json"
+        # QuickSight map keys only allow [0-9a-zA-Z-] — no underscores
+        table_key="${view_name//_/-}"
 
         PHYSICAL_MAP="{
-            \"${view_name}\": {
+            \"${table_key}\": {
                 \"RelationalTable\": {
                     \"DataSourceArn\": \"${DATASOURCE_ARN}\",
                     \"Schema\": \"dw\",
@@ -170,9 +166,9 @@ for t in tables.values():
         }"
 
         LOGICAL_MAP="{
-            \"${view_name}\": {
+            \"${table_key}\": {
                 \"Alias\": \"${view_name}\",
-                \"Source\": {\"PhysicalTableId\": \"${view_name}\"}
+                \"Source\": {\"PhysicalTableId\": \"${table_key}\"}
             }
         }"
 
@@ -195,15 +191,10 @@ for t in tables.values():
         if $DRY_RUN; then
             dry "UPSERT dataset: ${view_name} (${dataset_id})"
         elif qs_dataset_exists "${dataset_id}"; then
-            aws quicksight update-data-set \
-                --aws-account-id "${ACCOUNT}" \
-                --data-set-id "${dataset_id}" \
-                --name "${view_name}" \
-                --import-mode SPICE \
-                --physical-table-map "${PHYSICAL_MAP}" \
-                --logical-table-map "${LOGICAL_MAP}" \
-                --region "${REGION}" > /dev/null
-            ok "Updated dataset: ${view_name}"
+            # Datasets created via the new QuickSight console experience cannot be
+            # updated via the legacy CLI API. Schema doesn't change between deploys,
+            # so skip update — SPICE refresh below keeps the data current.
+            ok "Dataset exists (no update needed): ${view_name}"
         else
             aws quicksight create-data-set \
                 --aws-account-id "${ACCOUNT}" \

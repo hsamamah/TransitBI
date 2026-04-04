@@ -167,7 +167,11 @@ for view_file in \
     "vw_dailyvrh.sql" \
     "v_missed_trip_rate_by_route.sql" \
     "v_routes_consistently_late.sql" \
-    "v_voms.sql"; do
+    "v_voms.sql" \
+    "vw_data_quality_daily.sql" \
+    "vw_dataqualityalert.sql" \
+    "vw_missedtriptrend.sql" \
+    "vw_monthlyntdsummary.sql"; do
     run_sql_file "${VIEWS_DIR}/${view_file}" "View: ${view_file%.sql}" "--warn-on-fail"
 done
 
@@ -177,19 +181,35 @@ done
 if ! $VIEWS_ONLY; then
     log "=== [6] Grants ==="
 
-    # Glue ETL role
+    # ---- Schema USAGE (allows connecting to schema) ----
+    run_sql "GRANT USAGE ON SCHEMA stg TO \"IAMR:TransitGlueRole\", \"IAM:lingli_yang\", \"IAM:minglei_ma\", \"IAM:poojith\";" \
+        "GRANT USAGE stg to roles+team" "--warn-on-fail"
+    run_sql "GRANT USAGE ON SCHEMA dw  TO \"IAMR:TransitGlueRole\", \"IAM:lingli_yang\", \"IAM:minglei_ma\", \"IAM:poojith\", quicksight_user;" \
+        "GRANT USAGE dw to roles+team+qs" "--warn-on-fail"
+
+    # ---- Glue ETL role — full read/write on both schemas ----
     run_sql "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA stg TO \"IAMR:TransitGlueRole\";" \
-        "GRANT stg to TransitGlueRole" "--warn-on-fail"
+        "GRANT stg rw to TransitGlueRole" "--warn-on-fail"
     run_sql "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dw  TO \"IAMR:TransitGlueRole\";" \
-        "GRANT dw to TransitGlueRole" "--warn-on-fail"
-
-    # Default privileges for future tables
+        "GRANT dw rw to TransitGlueRole" "--warn-on-fail"
     run_sql "ALTER DEFAULT PRIVILEGES IN SCHEMA stg GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO \"IAMR:TransitGlueRole\";" \
-        "Default privileges stg" "--warn-on-fail"
+        "Default privileges stg TransitGlueRole" "--warn-on-fail"
     run_sql "ALTER DEFAULT PRIVILEGES IN SCHEMA dw  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO \"IAMR:TransitGlueRole\";" \
-        "Default privileges dw" "--warn-on-fail"
+        "Default privileges dw TransitGlueRole" "--warn-on-fail"
 
-    # QuickSight read-only user
+    # ---- Team members — full read/write on stg; full read/write on dw ----
+    for team_user in "IAM:lingli_yang" "IAM:minglei_ma" "IAM:poojith"; do
+        run_sql "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA stg TO \"${team_user}\";" \
+            "GRANT stg rw to ${team_user}" "--warn-on-fail"
+        run_sql "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dw  TO \"${team_user}\";" \
+            "GRANT dw rw to ${team_user}" "--warn-on-fail"
+        run_sql "ALTER DEFAULT PRIVILEGES IN SCHEMA stg GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO \"${team_user}\";" \
+            "Default privileges stg ${team_user}" "--warn-on-fail"
+        run_sql "ALTER DEFAULT PRIVILEGES IN SCHEMA dw  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO \"${team_user}\";" \
+            "Default privileges dw ${team_user}" "--warn-on-fail"
+    done
+
+    # ---- QuickSight read-only user — SELECT on dw only ----
     run_sql "GRANT SELECT ON ALL TABLES IN SCHEMA dw TO quicksight_user;" \
         "GRANT dw SELECT to quicksight_user" "--warn-on-fail"
     run_sql "ALTER DEFAULT PRIVILEGES IN SCHEMA dw GRANT SELECT ON TABLES TO quicksight_user;" \
@@ -197,4 +217,4 @@ if ! $VIEWS_ONLY; then
 fi
 
 log "=== Redshift deploy complete ==="
-[[ $DRY_RUN == true ]] && warn "DRY-RUN — no changes applied"
+if [[ $DRY_RUN == true ]]; then warn "DRY-RUN — no changes applied"; fi

@@ -385,4 +385,4 @@ run "aws iam attach-user-policy \
 ok "AdministratorAccess confirmed: hani-admin"
 
 log "=== IAM deploy complete ==="
-[[ $DRY_RUN == true ]] && warn "DRY-RUN — no changes applied"
+if [[ $DRY_RUN == true ]]; then warn "DRY-RUN — no changes applied"; fi

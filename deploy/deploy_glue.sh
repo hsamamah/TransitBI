@@ -184,6 +184,13 @@ upsert_trigger() {
                 --name '${name}' \
                 --region '${REGION}' > /dev/null" \
             "DELETE trigger (recreating): ${name}"
+        # Wait for deletion to propagate before recreating
+        if ! $DRY_RUN; then
+            for i in $(seq 1 12); do
+                sleep 5
+                if ! glue_trigger_exists "${name}"; then break; fi
+            done
+        fi
     fi
 
     local create_cmd="aws glue create-trigger \
@@ -357,6 +364,25 @@ upsert_workflow \
 # =============================================================
 log "=== [5] Upserting gtfs-static-pipeline triggers ==="
 
+# Remove legacy trigger names that conflict with new canonical names
+for legacy_trigger in "daily schedule"; do
+    if glue_trigger_exists "${legacy_trigger}"; then
+        run "aws glue deactivate-trigger --name '${legacy_trigger}' --region '${REGION}' > /dev/null 2>&1 || true" \
+            "DEACTIVATE legacy trigger: ${legacy_trigger}"
+        run "aws glue delete-trigger --name '${legacy_trigger}' --region '${REGION}' > /dev/null" \
+            "DELETE legacy trigger: ${legacy_trigger}"
+        # Wait for deletion to propagate (DELETING state can take ~30s)
+        if ! $DRY_RUN; then
+            log "  Waiting for '${legacy_trigger}' deletion to propagate..."
+            for i in $(seq 1 12); do
+                sleep 5
+                if ! glue_trigger_exists "${legacy_trigger}"; then break; fi
+            done
+        fi
+        ok "Removed legacy trigger: ${legacy_trigger}"
+    fi
+done
+
 # Schedule trigger — fires static ingestion daily at 07:00 PST
 upsert_trigger \
     "gtfs-static-daily-start" \
@@ -527,4 +553,4 @@ for t in sorted(rt, key=lambda x: x['Name']):
 fi
 
 log "=== Deploy complete ==="
-[[ $DRY_RUN == true ]] && warn "DRY-RUN mode — no changes were made"
+if [[ $DRY_RUN == true ]]; then warn "DRY-RUN mode — no changes were made"; fi

@@ -248,4 +248,4 @@ for view_name in \
 done
 
 log "=== QuickSight deploy complete ==="
-[[ $DRY_RUN == true ]] && warn "DRY-RUN — no changes applied"
+if [[ $DRY_RUN == true ]]; then warn "DRY-RUN — no changes applied"; fi

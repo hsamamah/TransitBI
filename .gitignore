@@ -35,3 +35,6 @@ logs/
 # Temp
 tmp/
 temp/
+
+# Claude
+.claude/settings.json

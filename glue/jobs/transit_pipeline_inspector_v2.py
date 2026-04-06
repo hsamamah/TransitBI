@@ -252,7 +252,7 @@ def get_factstop_gaps(stu_dates: set) -> dict:
     if not stu_dates:
         return {'missing_skeleton': [], 'needs_merge': []}
 
-    values_clause = ", ".join(f"('{d}')" for d in sorted(stu_dates))
+    datekeys_clause = ", ".join(str(int(d.replace('-', ''))) for d in sorted(stu_dates))
 
     _, qid = run_sql(
         f"""
@@ -262,10 +262,7 @@ def get_factstop_gaps(stu_dates: set) -> dict:
                      THEN 1 ELSE 0 END)                       AS fallback_count,
             COUNT(*)                                           AS total_count
         FROM dw.FactStop
-        WHERE datekey IN (
-            SELECT CAST(REPLACE(dt, '-', '') AS INTEGER)
-            FROM (VALUES {values_clause}) AS t(dt)
-        )
+        WHERE datekey IN ({datekeys_clause})
         GROUP BY datekey
         ORDER BY datekey;
         """,
@@ -301,7 +298,7 @@ def get_facttrip_gaps(vp_dates: set) -> dict:
     if not vp_dates:
         return {'missing_skeleton': [], 'needs_merge': []}
 
-    values_clause = ", ".join(f"('{d}')" for d in sorted(vp_dates))
+    datekeys_clause = ", ".join(str(int(d.replace('-', ''))) for d in sorted(vp_dates))
 
     _, qid = run_sql(
         f"""
@@ -311,10 +308,7 @@ def get_facttrip_gaps(vp_dates: set) -> dict:
                      THEN 1 ELSE 0 END)                       AS missed_count,
             COUNT(*)                                           AS total_count
         FROM dw.FactTrip
-        WHERE datekey IN (
-            SELECT CAST(REPLACE(dt, '-', '') AS INTEGER)
-            FROM (VALUES {values_clause}) AS t(dt)
-        )
+        WHERE datekey IN ({datekeys_clause})
         GROUP BY datekey
         ORDER BY datekey;
         """,
@@ -355,17 +349,14 @@ def get_factserviceday_gaps(all_facttrip_dates: set) -> list:
     if not all_facttrip_dates:
         return []
 
-    values_clause = ", ".join(f"('{d}')" for d in sorted(all_facttrip_dates))
+    datekeys_clause = ", ".join(str(int(d.replace('-', ''))) for d in sorted(all_facttrip_dates))
 
     _, qid = run_sql(
         f"""
         SELECT DISTINCT
             LPAD(ft.datekey::VARCHAR, 8, '0') AS datekey_str
         FROM dw.FactTrip ft
-        WHERE ft.datekey IN (
-            SELECT CAST(REPLACE(dt, '-', '') AS INTEGER)
-            FROM (VALUES {values_clause}) AS t(dt)
-        )
+        WHERE ft.datekey IN ({datekeys_clause})
           AND ft.tripstatus = 'OPERATED'
           AND NOT EXISTS (
               SELECT 1

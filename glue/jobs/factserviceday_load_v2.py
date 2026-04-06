@@ -372,7 +372,8 @@ def load_sql(target_date: str) -> str:
                      > {DQ_ESTIMATED_RATE_THRESHOLD}
                 THEN TRUE ELSE FALSE
             END                                                    AS dq_alert_flag,
-            BOOL_OR(ft.isspecialevent)                             AS is_special_event_day
+            CASE WHEN SUM(CASE WHEN ft.isspecialevent = TRUE THEN 1 ELSE 0 END) > 0
+                 THEN TRUE ELSE FALSE END                              AS is_special_event_day
         FROM dw.FactTrip ft
         WHERE ft.datekey = CAST(REPLACE('{target_date}', '-', '') AS INTEGER)
         GROUP BY ft.agencykey, ft.datekey

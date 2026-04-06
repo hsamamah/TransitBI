@@ -5,7 +5,18 @@ import time
 from datetime import datetime
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
-from awsglue.utils import getResolvedOptions
+from awsglue.utils import getResolvedOptions, GlueArgumentError
+
+# ── Optional --target_date parameter ─────────────────────────────────────────
+# When provided (YYYY-MM-DD), load from that specific staged S3 prefix instead
+# of asserting today's date. Used for backloads and historical reloads.
+# When absent, the scheduled behaviour is preserved: load from the latest
+# staged prefix and fail loudly if it does not match today's UTC date.
+try:
+    _date_args = getResolvedOptions(sys.argv, ['target_date'])
+    TARGET_DATE = _date_args['target_date']   # e.g. '2026-03-15'
+except GlueArgumentError:
+    TARGET_DATE = None
 
 # Setup
 sc = SparkContext()
@@ -94,19 +105,42 @@ STG_COLUMNS = {
 }
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
-def get_latest_date_prefix():
+def get_staging_prefix():
     """
-    Return the most recent staged S3 prefix under gtfs-static/combined/.
-    Verifies the latest prefix matches today's date — if it doesn't, the
-    ingestion job likely failed or used a fallback, and this job fails loudly
-    rather than silently loading the wrong date's data.
+    Return the S3 prefix to load from under gtfs-static/combined/.
+
+    Backload mode (TARGET_DATE is set):
+      Construct the exact prefix for the requested date and verify it exists
+      in S3.  Does NOT check whether the date is today — that is intentional.
+
+    Scheduled mode (TARGET_DATE is None):
+      Find the most recent staged prefix and verify it matches today's UTC
+      date.  Fails loudly if it does not, to prevent silently loading stale
+      data during the normal nightly run.
     """
+    paginator = s3.get_paginator('list_objects_v2')
+
+    if TARGET_DATE is not None:
+        # ── Backload path ─────────────────────────────────────────────────────
+        date_path = TARGET_DATE.replace('-', '/')          # '2026-03-15' → '2026/03/15'
+        prefix    = f'gtfs-static/combined/{date_path}/'
+        result    = s3.list_objects_v2(
+            Bucket=STAGING_BUCKET, Prefix=prefix, MaxKeys=1
+        )
+        if not result.get('Contents'):
+            raise Exception(
+                f'No staged files found for target date {TARGET_DATE} '
+                f'at s3://{STAGING_BUCKET}/{prefix}'
+            )
+        logger.info(f'Backload mode: loading from {prefix}')
+        return prefix
+
+    # ── Scheduled path ────────────────────────────────────────────────────────
     today_prefix = (
         'gtfs-static/combined/'
         + datetime.utcnow().strftime('%Y/%m/%d') + '/'
     )
 
-    paginator = s3.get_paginator('list_objects_v2')
     prefixes = []
     for page in paginator.paginate(
         Bucket=STAGING_BUCKET,
@@ -286,9 +320,10 @@ def load_table(table, s3_prefix):
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 logger.info('=== gtfs-static-redshift-load started ===')
+logger.info(f'TARGET_DATE: {TARGET_DATE or "None (scheduled mode — expect today)"}')
 
 try:
-    latest_prefix = get_latest_date_prefix()
+    latest_prefix = get_staging_prefix()
     logger.info(f'Loading from: s3://{STAGING_BUCKET}/{latest_prefix}')
 
     for table in TABLES:

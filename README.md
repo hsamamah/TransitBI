@@ -16,8 +16,9 @@ seattle-transit-dw/
 │   ├── jobs/               # All Glue ETL scripts
 │   └── lib/                # Shared Python libraries (pipeline_param_reader_v2)
 ├── lambda/
-│   ├── gtfs-rt-polling/    # RT feed poller (EventBridge → S3)
-│   └── gtfs-pipeline-notification/ # SNS/email alerting
+│   ├── gtfs-rt-polling/         # RT feed poller (EventBridge → S3)
+│   ├── gtfs-pipeline-notification/ # Daily digest email (SNS)
+│   └── failure-notifier/        # Failure alert Lambda (EventBridge → SNS)
 ├── redshift/
 │   ├── ddl/                # CREATE TABLE statements (stg, dim, fact)
 │   └── views/              # BI layer SQL views (10 views)
@@ -29,15 +30,18 @@ seattle-transit-dw/
 │   ├── policies/           # 3 custom managed policies
 │   ├── roles/              # TransitGlueRole, RedshiftS3CopyRole trust + inline policies
 │   └── users/              # Per-user policy snapshots (hani-admin, team members)
-├── eventbridge/            # EventBridge rule definitions
+├── eventbridge/            # EventBridge rule definitions (polling schedule + failure rules)
+├── scripts/
+│   └── backload.sh         # Manual date-range backload for RT facts + static dims
 ├── .env.example            # Secret variable template (copy to .env)
 └── deploy/
-    ├── config.env          # Centralized project config (no secrets)
-    ├── deploy_all.sh       # Master deploy — runs all scripts in order
-    ├── deploy_iam.sh       # IAM roles, managed policies, group, user memberships
-    ├── deploy_redshift.sh  # Redshift DDL + views
-    ├── deploy_glue.sh      # Glue jobs + workflows + triggers
-    └── deploy_quicksight.sh # QuickSight data source, datasets, shared folder, SPICE refresh
+    ├── config.env              # Centralized project config (no secrets)
+    ├── deploy_all.sh           # Master deploy — runs all scripts in order
+    ├── deploy_iam.sh           # IAM roles, managed policies, group, user memberships
+    ├── deploy_redshift.sh      # Redshift DDL + views
+    ├── deploy_glue.sh          # Glue jobs + workflows + triggers
+    ├── deploy_quicksight.sh    # QuickSight data source, datasets, shared folder, SPICE refresh
+    └── deploy_notifications.sh # Failure alerting — SNS topic, Lambda, EventBridge, CW Alarms
 ```
 
 ---
@@ -78,6 +82,7 @@ bash deploy/deploy_iam.sh
 bash deploy/deploy_redshift.sh
 bash deploy/deploy_glue.sh
 bash deploy/deploy_quicksight.sh
+bash deploy/deploy_notifications.sh             # failure alerting infrastructure only
 bash deploy/deploy_glue.sh --upload-only        # upload scripts to S3 only
 bash deploy/deploy_redshift.sh --views-only     # redeploy views only
 bash deploy/deploy_quicksight.sh --refresh-only # trigger SPICE refresh only
@@ -147,17 +152,66 @@ EventBridge (cron)
 
 ---
 
+## Failure Alerting
+
+All Glue job/workflow failures and Lambda errors send immediate email alerts via the `transit-failure-alerts` SNS topic.
+
+| Trigger | Mechanism | Message content |
+|---------|-----------|-----------------|
+| Any Glue job → FAILED | EventBridge → `transit-failure-notifier` Lambda | Job name, run ID, error message, CloudWatch log link |
+| Any Glue workflow → FAILED/STOPPED | EventBridge → `transit-failure-notifier` Lambda | Workflow name, run ID, start/end times |
+| Lambda function errors | CloudWatch Alarm (1+ errors / 5 min) → SNS | Standard alarm notification |
+
+**Deploy:**
+```bash
+bash deploy/deploy_notifications.sh
+```
+
+**Subscribe your email** (one-time, not automated):
+```bash
+aws sns subscribe \
+  --topic-arn arn:aws:sns:us-west-2:805699509606:transit-failure-alerts \
+  --protocol email --notification-endpoint YOUR_EMAIL \
+  --region us-west-2
+```
+
+---
+
+## Backload
+
+Replay the transform + load steps for a historical date range, assuming raw data is already in S3. Useful for gap recovery, schema migrations, and initial historical loads.
+
+Raw `.pb` files are retained for **90 days** in `seattle-transit-raw`. Static staged files in `seattle-transit-staging` have no expiry.
+
+```bash
+# Reload RT facts for a 7-day range
+bash scripts/backload.sh --start_date 2026-03-01 --end_date 2026-03-07
+
+# Also reload static dims from a specific staged date
+bash scripts/backload.sh --start_date 2026-03-01 --end_date 2026-03-07 --static-date 2026-03-01
+
+# Dry run — print job submissions without executing
+bash scripts/backload.sh --start_date 2026-03-01 --end_date 2026-03-07 --dry-run
+```
+
+See [`scripts/README.md`](scripts/README.md) for full usage and cost estimates.
+
+---
+
 ## AWS Resources
 
 | Service | Resource | Purpose |
 |---------|----------|---------|
-| Glue | 8 jobs, 2 workflows | ETL pipeline |
+| Glue | 9 jobs, 2 workflows | ETL pipeline |
 | Redshift Serverless | workgroup: `team` / namespace: `transit` / db: `dev` | Data warehouse |
 | S3 | seattle-transit-raw/staging/processed | Data lake |
-| DynamoDB | seattle-transit-pipeline | Pipeline parameter store |
-| EventBridge | gtfs-rt-polling-schedule | Polling trigger |
+| DynamoDB | seattle-transit-pipeline | Pipeline parameter store + audit trail |
+| EventBridge | gtfs-rt-polling-schedule · glue-job-failure · glue-workflow-failure | Polling trigger + failure routing |
+| SNS | haniqa12345gmail (daily digest) · transit-failure-alerts (failure alerts) | Email notifications |
+| Lambda | gtfs-rt-polling · gtfs-pipeline-notification · transit-failure-notifier | Feed polling + alerting |
+| CloudWatch | 3 alarms (one per Lambda function) | Lambda error alerting → SNS |
 | QuickSight | 1 data source, 6 SPICE datasets, 1 shared folder, 1 dashboard | BI dashboards |
-| IAM | 2 roles, 3 managed policies, 1 group (TransitDWTeam), 4 users | Access control |
+| IAM | 3 roles, 3 managed policies, 1 group (TransitDWTeam), 4 users | Access control |
 
 ---
 

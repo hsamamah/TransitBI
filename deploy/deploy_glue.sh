@@ -300,31 +300,31 @@ upsert_glue_job \
 upsert_glue_job \
     "gtfs-rt-parse-load-glue" \
     "${SCRIPTS}/gtfs-rt-parse-load-glue.py" \
-    10 60 \
+    4 20 \
     "\"--iam_role\": \"${REDSHIFT_COPY_ROLE}\", \"--additional-python-modules\": \"gtfs-realtime-bindings\""
 
 upsert_glue_job \
     "transit-pipeline-inspector" \
     "${SCRIPTS}/transit_pipeline_inspector_v2.py" \
-    2 30 \
+    2 15 \
     "\"--lookback_days\": \"30\""
 
 upsert_glue_job \
     "factstop-skeleton-and-merge-load" \
     "${SCRIPTS}/factstop_skeleton_and_merge_v2.py" \
-    2 60 \
+    2 20 \
     "${PARAM_READER}, \"--phase\": \"both\", \"--force\": \"false\""
 
 upsert_glue_job \
     "facttrip-skeleton-and-merge-load" \
     "${SCRIPTS}/facttrip_skeleton_and_merge_v2.py" \
-    2 60 \
+    2 20 \
     "${PARAM_READER}, \"--phase\": \"both\", \"--force\": \"false\""
 
 upsert_glue_job \
     "factserviceday-load" \
     "${SCRIPTS}/factserviceday_load_v2.py" \
-    2 60 \
+    2 15 \
     "${PARAM_READER}"
 
 ok "All jobs upserted"

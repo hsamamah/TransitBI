@@ -2,20 +2,16 @@
 GTFS-RT Lambda Polling Function — King County Metro + Sound Transit
 ===================================================================
 Triggered by EventBridge every 1 minute.
-Each invocation fetches twice with a 30-second sleep between fetches,
-giving effective 30-second polling within Lambda's 1-minute minimum
-EventBridge schedule.
+Each invocation fetches all 4 feeds once and saves to S3.
 
 Fixes applied vs. prior version:
   - HTTPS URL (was HTTP)
-  - Double-fetch with time.sleep(30) for 30-second effective polling
   - Minimum byte validation (>100 bytes) catches empty-header responses
   - API key read from environment variable OBA_API_KEY
 """
 
 import json
 import os
-import time
 import boto3
 from datetime import datetime, timezone
 from urllib.request import urlopen, Request
@@ -111,40 +107,13 @@ def fetch_all(now_utc):
 # Lambda Handler
 # ============================================================
 def lambda_handler(event, context):
-    """
-    Entry point.
-    Fetches all feeds twice — once immediately, once after 30 seconds —
-    to achieve effective 30-second polling within EventBridge's 1-minute
-    minimum schedule.
-
-    Lambda timeout must be set to >= 65 seconds in the function config.
-    """
-    results = {'fetches': []}
-    total_ok = total_fail = 0
-
-    # ── First fetch ──────────────────────────────────────────────
+    """Fetch all 4 RT feeds once and save to S3."""
     now_utc = datetime.now(timezone.utc)
-    print(f"--- Fetch 1 of 2  {now_utc.strftime('%H:%M:%S')} UTC ---")
+    print(f"--- Fetch {now_utc.strftime('%H:%M:%S')} UTC ---")
     ok, fail, feed_results = fetch_all(now_utc)
-    total_ok   += ok
-    total_fail += fail
-    results['fetches'].append({'fetch': 1, 'timestamp': now_utc.isoformat(), 'feeds': feed_results})
-
-    # ── Wait 30 seconds ──────────────────────────────────────────
-    time.sleep(30)
-
-    # ── Second fetch ─────────────────────────────────────────────
-    now_utc = datetime.now(timezone.utc)
-    print(f"--- Fetch 2 of 2  {now_utc.strftime('%H:%M:%S')} UTC ---")
-    ok, fail, feed_results = fetch_all(now_utc)
-    total_ok   += ok
-    total_fail += fail
-    results['fetches'].append({'fetch': 2, 'timestamp': now_utc.isoformat(), 'feeds': feed_results})
-
-    results['summary'] = {'total_ok': total_ok, 'total_fail': total_fail}
-    print(f"Done: {total_ok} ok, {total_fail} fail")
+    print(f"Done: {ok} ok, {fail} fail")
 
     return {
         'statusCode': 200,
-        'body': json.dumps(results),
+        'body': json.dumps({'timestamp': now_utc.isoformat(), 'ok': ok, 'fail': fail, 'feeds': feed_results}),
     }

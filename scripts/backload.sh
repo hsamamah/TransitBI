@@ -76,9 +76,11 @@ date_range() {
 }
 
 # Submit a Glue job run and return the job run ID.
-# Usage: submit_job JOB_NAME KEY=VALUE [KEY=VALUE ...]
+# Usage: submit_job TIMEOUT_MINUTES JOB_NAME KEY=VALUE [KEY=VALUE ...]
+# TIMEOUT_MINUTES overrides the job definition timeout for this run only.
 submit_job() {
-    local job_name="$1"; shift
+    local timeout_min="$1"; shift
+    local job_name="$1";    shift
     local args_json=""
     for kv in "$@"; do
         local key="${kv%%=*}"
@@ -88,7 +90,7 @@ submit_job() {
     args_json="{${args_json%,}}"
 
     if $DRY_RUN; then
-        echo "  [dry-run] start-job-run: ${job_name}  args=${args_json}"
+        echo "  [dry-run] start-job-run: ${job_name}  timeout=${timeout_min}m  args=${args_json}"
         echo "dry-run-id"
         return
     fi
@@ -96,6 +98,7 @@ submit_job() {
     aws glue start-job-run \
         --job-name "${job_name}" \
         --arguments "${args_json}" \
+        --timeout "${timeout_min}" \
         --region "${REGION}" \
         --output text \
         --query 'JobRunId'
@@ -157,7 +160,7 @@ estimate_cost() {
     # factserviceday: 2 workers × 3 min    = $0.04/day
     # total ≈ $0.77/day
     local total
-    total=$(echo "scale=2; ${n_days} * 0.77" | bc)
+    total=$(python3 -c "print(f'{${n_days} * 0.77:.2f}')")
     echo "~\$${total}"
 }
 
@@ -185,7 +188,7 @@ echo ""
 declare -a parse_pairs=()
 for dt in $(date_range); do
     info "Submitting gtfs-rt-parse-load-glue for ${dt}..."
-    run_id=$(submit_job "gtfs-rt-parse-load-glue" "target_date=${dt}")
+    run_id=$(submit_job 30 "gtfs-rt-parse-load-glue" "target_date=${dt}")
     info "  Run ID: ${run_id}"
     parse_pairs+=("gtfs-rt-parse-load-glue:${run_id}")
 
@@ -203,14 +206,14 @@ log "Step 2: Fact jobs (--start_date ${START_DATE} --end_date ${END_DATE})"
 declare -a fact_pairs=()
 
 info "Submitting factstop-skeleton-and-merge-load..."
-run_id=$(submit_job "factstop-skeleton-and-merge-load" \
+run_id=$(submit_job 60 "factstop-skeleton-and-merge-load" \
     "start_date=${START_DATE}" "end_date=${END_DATE}" \
     "phase=both" "force=false")
 info "  Run ID: ${run_id}"
 fact_pairs+=("factstop-skeleton-and-merge-load:${run_id}")
 
 info "Submitting facttrip-skeleton-and-merge-load..."
-run_id=$(submit_job "facttrip-skeleton-and-merge-load" \
+run_id=$(submit_job 60 "facttrip-skeleton-and-merge-load" \
     "start_date=${START_DATE}" "end_date=${END_DATE}" \
     "phase=both" "force=false")
 info "  Run ID: ${run_id}"
@@ -225,7 +228,7 @@ info "Both completed."
 log "Step 3: factserviceday-load"
 
 info "Submitting factserviceday-load..."
-run_id=$(submit_job "factserviceday-load" \
+run_id=$(submit_job 30 "factserviceday-load" \
     "start_date=${START_DATE}" "end_date=${END_DATE}")
 info "  Run ID: ${run_id}"
 wait_for_jobs "factserviceday-load:${run_id}"
@@ -236,7 +239,7 @@ info "Completed."
 if [[ -n "${STATIC_DATE}" ]] && ! $RT_ONLY; then
     log "Step 4: Static dims reload for ${STATIC_DATE}"
     info "Submitting gtfs-static-redshift-load with --target_date ${STATIC_DATE}..."
-    run_id=$(submit_job "gtfs-static-redshift-load" "target_date=${STATIC_DATE}")
+    run_id=$(submit_job 60 "gtfs-static-redshift-load" "target_date=${STATIC_DATE}")
     info "  Run ID: ${run_id}"
     wait_for_jobs "gtfs-static-redshift-load:${run_id}"
     info "Completed."

@@ -5,6 +5,8 @@
 # Creates or updates the QuickSight data source and all 6
 # SPICE datasets for the Seattle Transit DW project.
 # Triggers a SPICE refresh for each dataset after upsert.
+# Associates all assets with the shared folder and grants
+# team members full folder access.
 #
 # Usage:
 #   bash deploy/deploy_quicksight.sh              # full deploy
@@ -14,15 +16,18 @@
 # Resources managed:
 #   Data source : seattle-transit-dw  (Redshift Serverless via VPC)
 #   Datasets    : 6 SPICE datasets (one per BI view in dw schema)
+#   Folder      : Seattle Transit DW (shared folder, assets + team access)
 #
 # NOT managed by this script (created manually in console):
 #   Analyses  — QuickSight analysis definitions are not CLI-portable
 #   Dashboards — Same; dashboards reference analyses by ARN
 #
 # Idempotency:
-#   Data source: create if not exists, update-data-source if exists
-#   Datasets:    create if not exists, update-data-set if exists
-#   SPICE:       create-ingestion triggered unconditionally (idempotent by design)
+#   Data source:      create if not exists, update-data-source if exists
+#   Datasets:         create if not exists, update-data-set if exists
+#   SPICE:            create-ingestion triggered unconditionally (idempotent by design)
+#   Folder members:   create-folder-membership, suppress AlreadyExists errors
+#   Folder permissions: update-folder-permissions with grant-permissions (idempotent)
 # =============================================================
 
 set -euo pipefail
@@ -50,6 +55,17 @@ QS_DIR="${SCRIPT_DIR}/../quicksight"
 DATASOURCE_ID="ee6148c5-7ba2-45b8-b4a5-c721e9ab7aca"
 VPC_CONNECTION_ARN="arn:aws:quicksight:${REGION}:${ACCOUNT}:vpcConnection/c9508d2a-f178-4add-a3fb-ba52ae4c742f"
 QS_PRINCIPAL="arn:aws:quicksight:${REGION}:${ACCOUNT}:user/default/hani-admin"
+FOLDER_ID="240636fa-ade1-4f5a-9929-67acda51d579"
+
+# Canonical dataset order — drives all three loops (Steps 2, 3, 4)
+DATASET_ORDER=(
+    "vw_otp_by_route_month"
+    "v_routes_consistently_late"
+    "vw_dailyvrm"
+    "v_voms"
+    "vw_dailyvrh"
+    "v_missed_trip_rate_by_route"
+)
 
 # Dataset IDs — stable UUIDs matching the live resources
 declare -A DATASET_IDS=(
@@ -132,61 +148,9 @@ if ! $REFRESH_ONLY; then
 
     DATASOURCE_ARN="arn:aws:quicksight:${REGION}:${ACCOUNT}:datasource/${DATASOURCE_ID}"
 
-    for view_name in \
-        "vw_otp_by_route_month" \
-        "v_routes_consistently_late" \
-        "vw_dailyvrm" \
-        "v_voms" \
-        "vw_dailyvrh" \
-        "v_missed_trip_rate_by_route"; do
+    for view_name in "${DATASET_ORDER[@]}"; do
 
         dataset_id="${DATASET_IDS[$view_name]}"
-        config_file="${QS_DIR}/datasets/${view_name}.json"
-        # QuickSight map keys only allow [0-9a-zA-Z-] — no underscores
-        table_key="${view_name//_/-}"
-
-        PHYSICAL_MAP="{
-            \"${table_key}\": {
-                \"RelationalTable\": {
-                    \"DataSourceArn\": \"${DATASOURCE_ARN}\",
-                    \"Schema\": \"dw\",
-                    \"Name\": \"${view_name}\",
-                    \"InputColumns\": $(python3 -c "
-import json
-with open('${config_file}') as f:
-    d = json.load(f)
-tables = d.get('PhysicalTableMap', {})
-for t in tables.values():
-    cols = t.get('RelationalTable', {}).get('InputColumns', [])
-    print(json.dumps(cols))
-    break
-")
-                }
-            }
-        }"
-
-        LOGICAL_MAP="{
-            \"${table_key}\": {
-                \"Alias\": \"${view_name}\",
-                \"Source\": {\"PhysicalTableId\": \"${table_key}\"}
-            }
-        }"
-
-        DATASET_PERMISSIONS="[{
-            \"Principal\": \"${QS_PRINCIPAL}\",
-            \"Actions\": [
-                \"quicksight:DescribeDataSet\",
-                \"quicksight:DescribeDataSetPermissions\",
-                \"quicksight:PassDataSet\",
-                \"quicksight:DescribeIngestion\",
-                \"quicksight:ListIngestions\",
-                \"quicksight:UpdateDataSet\",
-                \"quicksight:DeleteDataSet\",
-                \"quicksight:CreateIngestion\",
-                \"quicksight:CancelIngestion\",
-                \"quicksight:UpdateDataSetPermissions\"
-            ]
-        }]"
 
         if $DRY_RUN; then
             dry "UPSERT dataset: ${view_name} (${dataset_id})"
@@ -196,6 +160,54 @@ for t in tables.values():
             # so skip update — SPICE refresh below keeps the data current.
             ok "Dataset exists (no update needed): ${view_name}"
         else
+            # Build table maps only when actually creating (avoids 6 python3 subprocesses on re-deploy)
+            config_file="${QS_DIR}/datasets/${view_name}.json"
+            # QuickSight map keys only allow [0-9a-zA-Z-] — no underscores
+            table_key="${view_name//_/-}"
+
+            PHYSICAL_MAP="{
+                \"${table_key}\": {
+                    \"RelationalTable\": {
+                        \"DataSourceArn\": \"${DATASOURCE_ARN}\",
+                        \"Schema\": \"dw\",
+                        \"Name\": \"${view_name}\",
+                        \"InputColumns\": $(python3 -c "
+import json
+with open('${config_file}') as f:
+    d = json.load(f)
+tables = d.get('PhysicalTableMap', {})
+for t in tables.values():
+    cols = t.get('RelationalTable', {}).get('InputColumns', [])
+    print(json.dumps(cols))
+    break
+")
+                    }
+                }
+            }"
+
+            LOGICAL_MAP="{
+                \"${table_key}\": {
+                    \"Alias\": \"${view_name}\",
+                    \"Source\": {\"PhysicalTableId\": \"${table_key}\"}
+                }
+            }"
+
+            DATASET_PERMISSIONS="[{
+                \"Principal\": \"${QS_PRINCIPAL}\",
+                \"Actions\": [
+                    \"quicksight:DescribeDataSet\",
+                    \"quicksight:DescribeDataSetPermissions\",
+                    \"quicksight:PassDataSet\",
+                    \"quicksight:DescribeIngestion\",
+                    \"quicksight:ListIngestions\",
+                    \"quicksight:UpdateDataSet\",
+                    \"quicksight:DeleteDataSet\",
+                    \"quicksight:CreateIngestion\",
+                    \"quicksight:CancelIngestion\",
+                    \"quicksight:UpdateDataSetPermissions\"
+                ]
+            }]"
+
             aws quicksight create-data-set \
                 --aws-account-id "${ACCOUNT}" \
                 --data-set-id "${dataset_id}" \
@@ -211,32 +223,100 @@ for t in tables.values():
 fi
 
 # =============================================================
-# STEP 3 — SPICE Refresh
+# STEP 3 — SPICE Refresh (parallel)
 # =============================================================
 log "=== [3] SPICE Refresh ==="
 
-for view_name in \
-    "vw_otp_by_route_month" \
-    "v_routes_consistently_late" \
-    "vw_dailyvrm" \
-    "v_voms" \
-    "vw_dailyvrh" \
-    "v_missed_trip_rate_by_route"; do
+DEPLOY_TS="$(date '+%Y%m%d%H%M%S')"
+pids=()
+for view_name in "${DATASET_ORDER[@]}"; do
 
     dataset_id="${DATASET_IDS[$view_name]}"
-    ingestion_id="deploy-$(date '+%Y%m%d%H%M%S')-${view_name}"
+    ingestion_id="deploy-${DEPLOY_TS}-$$-${view_name}"
 
     if $DRY_RUN; then
         dry "TRIGGER SPICE refresh: ${view_name}"
     else
-        aws quicksight create-ingestion \
-            --aws-account-id "${ACCOUNT}" \
-            --data-set-id "${dataset_id}" \
-            --ingestion-id "${ingestion_id}" \
-            --region "${REGION}" > /dev/null
-        ok "SPICE refresh triggered: ${view_name}"
+        ( aws quicksight create-ingestion \
+              --aws-account-id "${ACCOUNT}" \
+              --data-set-id "${dataset_id}" \
+              --ingestion-id "${ingestion_id}" \
+              --region "${REGION}" > /dev/null \
+          && ok "SPICE refresh triggered: ${view_name}" ) &
+        pids+=($!)
     fi
 done
+for pid in "${pids[@]+"${pids[@]}"}"; do wait "$pid"; done
+
+# =============================================================
+# STEP 4 — Shared Folder: asset membership + team permissions
+# =============================================================
+if ! $REFRESH_ONLY; then
+    log "=== [4] Shared Folder ==="
+
+    # Full contributor/admin permission set on the folder (single line — embedded in JSON arg)
+    FOLDER_ACTIONS='["quicksight:CreateFolder","quicksight:DescribeFolder","quicksight:UpdateFolder","quicksight:DeleteFolder","quicksight:CreateFolderMembership","quicksight:DeleteFolderMembership","quicksight:DescribeFolderPermissions","quicksight:UpdateFolderPermissions"]'
+
+    # 4a — Add each dataset as a folder member (parallel)
+    pids=()
+    for view_name in "${DATASET_ORDER[@]}"; do
+
+        dataset_id="${DATASET_IDS[$view_name]}"
+
+        if $DRY_RUN; then
+            dry "ADD dataset to folder: ${view_name}"
+        else
+            ( if aws quicksight create-folder-membership \
+                      --aws-account-id "${ACCOUNT}" \
+                      --folder-id "${FOLDER_ID}" \
+                      --member-id "${dataset_id}" \
+                      --member-type DATASET \
+                      --region "${REGION}" > /dev/null 2>&1; then
+                  ok "Folder member (dataset): ${view_name}"
+              else
+                  warn "Folder membership skipped (already exists or error): ${view_name}"
+              fi ) &
+            pids+=($!)
+        fi
+    done
+    for pid in "${pids[@]+"${pids[@]}"}"; do wait "$pid"; done
+
+    # 4b — Add data source as a folder member
+    if $DRY_RUN; then
+        dry "ADD data source to folder: seattle-transit-dw"
+    elif aws quicksight create-folder-membership \
+            --aws-account-id "${ACCOUNT}" \
+            --folder-id "${FOLDER_ID}" \
+            --member-id "${DATASOURCE_ID}" \
+            --member-type DATASOURCE \
+            --region "${REGION}" > /dev/null 2>&1; then
+        ok "Folder member (data source): seattle-transit-dw"
+    else
+        warn "Folder membership skipped (already exists or error): seattle-transit-dw"
+    fi
+
+    # 4c — Grant full folder permissions to each team member (parallel)
+    pids=()
+    for team_user in lingli_yang minglei_ma poojith; do
+        qs_user_arn="arn:aws:quicksight:${REGION}:${ACCOUNT}:user/default/${team_user}"
+
+        if $DRY_RUN; then
+            dry "GRANT folder permissions to: ${team_user}"
+        else
+            ( if aws quicksight update-folder-permissions \
+                      --aws-account-id "${ACCOUNT}" \
+                      --folder-id "${FOLDER_ID}" \
+                      --grant-permissions "[{\"Principal\": \"${qs_user_arn}\", \"Actions\": ${FOLDER_ACTIONS}}]" \
+                      --region "${REGION}" > /dev/null 2>&1; then
+                  ok "Folder permissions granted: ${team_user}"
+              else
+                  warn "Folder permissions skipped (already set or error): ${team_user}"
+              fi ) &
+            pids+=($!)
+        fi
+    done
+    for pid in "${pids[@]+"${pids[@]}"}"; do wait "$pid"; done
+fi
 
 log "=== QuickSight deploy complete ==="
 if [[ $DRY_RUN == true ]]; then warn "DRY-RUN — no changes applied"; fi

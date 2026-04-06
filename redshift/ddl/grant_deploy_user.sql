@@ -1,46 +1,92 @@
--- One-time grants required for deploy_redshift.sh to run as IAM:hani-admin
+-- =============================================================
+-- grant_deploy_user.sql
+-- =============================================================
+-- Grants all permissions needed by IAM:hani-admin to:
+--   • Run deploy_redshift.sh  (DDL, views)
+--   • Run diagnostic queries  (SELECT on stg.*, dw.*)
+--   • Replace views           (ownership transfer)
+--   • Run Glue ETL jobs       (TransitGlueRole)
+--   • Support team members    (lingli_yang, minglei_ma, poojith)
+--   • Support QuickSight      (quicksight_user read-only on dw)
+--
 -- Run this as the 'admin' superuser in Redshift Query Editor v2.
--- Only needs to be run once per environment setup.
+-- Safe to re-run — all statements are idempotent.
+-- Re-run any time a new table or view is added to stg or dw.
+-- =============================================================
 
--- Allow IAM:hani-admin to create schemas and use the database
+
+-- ── 1. Database-level ─────────────────────────────────────────
+-- Allow hani-admin to create new schemas if needed
 GRANT CREATE ON DATABASE dev TO "IAM:hani-admin";
 
--- Allow IAM:hani-admin full access to existing schemas
-GRANT ALL ON SCHEMA stg TO "IAM:hani-admin";
-GRANT ALL ON SCHEMA dw  TO "IAM:hani-admin";
 
--- Allow IAM:hani-admin to manage objects in these schemas
-ALTER DEFAULT PRIVILEGES IN SCHEMA stg GRANT ALL ON TABLES TO "IAM:hani-admin";
-ALTER DEFAULT PRIVILEGES IN SCHEMA dw  GRANT ALL ON TABLES TO "IAM:hani-admin";
+-- ── 2. Schema-level ──────────────────────────────────────────
+-- USAGE  = can reference objects in the schema
+-- CREATE = can CREATE TABLE / CREATE VIEW in the schema
+GRANT USAGE, CREATE ON SCHEMA stg TO "IAM:hani-admin";
+GRANT USAGE, CREATE ON SCHEMA dw  TO "IAM:hani-admin";
 
--- Allow IAM:hani-admin full access to all existing tables
-GRANT ALL ON ALL TABLES IN SCHEMA stg TO "IAM:hani-admin";
-GRANT ALL ON ALL TABLES IN SCHEMA dw  TO "IAM:hani-admin";
 
--- Allow IAM:hani-admin to grant privileges to other users (needed for GRANT steps in deploy)
--- This requires superuser; if not possible, the GRANT steps will warn-and-skip (harmless —
--- the grants listed below are already applied in the live environment).
+-- ── 3. Existing tables and views ─────────────────────────────
+-- Covers every table/view that exists right now.
+-- Re-run this block after adding new tables.
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA stg TO "IAM:hani-admin";
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA dw  TO "IAM:hani-admin";
 
--- ============================================================
--- Live environment grants (already applied by RootIdentity)
--- These are documented here for reference and re-apply if the
--- environment is rebuilt from scratch by a superuser.
--- ============================================================
 
--- Schema USAGE
-GRANT USAGE ON SCHEMA stg TO "IAMR:TransitGlueRole", "IAM:lingli_yang", "IAM:minglei_ma", "IAM:poojith";
-GRANT USAGE ON SCHEMA dw  TO "IAMR:TransitGlueRole", "IAM:lingli_yang", "IAM:minglei_ma", "IAM:poojith", quicksight_user;
+-- ── 4. Future tables and views ───────────────────────────────
+-- Ensures any table/view created by admin in the future is
+-- automatically accessible to hani-admin without re-running grants.
+ALTER DEFAULT PRIVILEGES FOR USER admin IN SCHEMA stg
+    GRANT ALL PRIVILEGES ON TABLES TO "IAM:hani-admin";
+ALTER DEFAULT PRIVILEGES FOR USER admin IN SCHEMA dw
+    GRANT ALL PRIVILEGES ON TABLES TO "IAM:hani-admin";
 
--- TransitGlueRole — full read/write (needed by all Glue ETL jobs)
+
+-- ── 5. View ownership transfer ───────────────────────────────
+-- Required so hani-admin can run CREATE OR REPLACE VIEW.
+-- Redshift requires the issuing user to OWN the view to replace it.
+-- These views were originally created by 'admin'; transfer ownership
+-- to hani-admin so deploy_redshift.sh can update them without a
+-- superuser session.
+ALTER TABLE dw.vw_otp_by_route_month        OWNER TO "IAM:hani-admin";
+ALTER TABLE dw.vw_dailyvrm                  OWNER TO "IAM:hani-admin";
+ALTER TABLE dw.vw_dailyvrh                  OWNER TO "IAM:hani-admin";
+ALTER TABLE dw.v_missed_trip_rate_by_route  OWNER TO "IAM:hani-admin";
+ALTER TABLE dw.v_routes_consistently_late   OWNER TO "IAM:hani-admin";
+ALTER TABLE dw.v_voms                       OWNER TO "IAM:hani-admin";
+ALTER TABLE dw.vw_data_quality_daily        OWNER TO "IAM:hani-admin";
+ALTER TABLE dw.vw_dataqualityalert          OWNER TO "IAM:hani-admin";
+ALTER TABLE dw.vw_missedtriptrend           OWNER TO "IAM:hani-admin";
+ALTER TABLE dw.vw_monthlyntdsummary         OWNER TO "IAM:hani-admin";
+
+
+-- =============================================================
+-- Other principals (re-apply when new tables are added)
+-- =============================================================
+
+-- ── TransitGlueRole — full read/write (all Glue ETL jobs) ────
+GRANT USAGE ON SCHEMA stg TO "IAMR:TransitGlueRole";
+GRANT USAGE ON SCHEMA dw  TO "IAMR:TransitGlueRole";
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA stg TO "IAMR:TransitGlueRole";
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dw  TO "IAMR:TransitGlueRole";
-ALTER DEFAULT PRIVILEGES IN SCHEMA stg GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "IAMR:TransitGlueRole";
-ALTER DEFAULT PRIVILEGES IN SCHEMA dw  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "IAMR:TransitGlueRole";
+ALTER DEFAULT PRIVILEGES FOR USER admin IN SCHEMA stg
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "IAMR:TransitGlueRole";
+ALTER DEFAULT PRIVILEGES FOR USER admin IN SCHEMA dw
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "IAMR:TransitGlueRole";
 
--- Team members — full read/write on stg and dw
+-- ── Team members — full read/write on stg and dw ─────────────
+GRANT USAGE ON SCHEMA stg TO "IAM:lingli_yang", "IAM:minglei_ma", "IAM:poojith";
+GRANT USAGE ON SCHEMA dw  TO "IAM:lingli_yang", "IAM:minglei_ma", "IAM:poojith";
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA stg TO "IAM:lingli_yang", "IAM:minglei_ma", "IAM:poojith";
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dw  TO "IAM:lingli_yang", "IAM:minglei_ma", "IAM:poojith";
+ALTER DEFAULT PRIVILEGES FOR USER admin IN SCHEMA stg
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "IAM:lingli_yang", "IAM:minglei_ma", "IAM:poojith";
+ALTER DEFAULT PRIVILEGES FOR USER admin IN SCHEMA dw
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "IAM:lingli_yang", "IAM:minglei_ma", "IAM:poojith";
 
--- QuickSight — read-only on dw
+-- ── QuickSight — read-only on dw ─────────────────────────────
+GRANT USAGE ON SCHEMA dw TO quicksight_user;
 GRANT SELECT ON ALL TABLES IN SCHEMA dw TO quicksight_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA dw GRANT SELECT ON TABLES TO quicksight_user;
+ALTER DEFAULT PRIVILEGES FOR USER admin IN SCHEMA dw
+    GRANT SELECT ON TABLES TO quicksight_user;

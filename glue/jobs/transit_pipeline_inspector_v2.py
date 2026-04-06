@@ -22,8 +22,8 @@ Gap handling:
   the dates that actually need work.
 
 DynamoDB key structure:
-  PK (pipeline_job_key) : {workflow_run_id}#{job_name}
-  SK (param_key)        : "config"
+  PK : {workflow_run_id}#{job_name}
+  SK : "config"
   Attributes:
     phase      : skeleton | merge | both | load | none
     start_date : YYYY-MM-DD  (earliest gap date)
@@ -401,12 +401,12 @@ def write_job_params(workflow_run_id: str, job_name: str, params: dict):
     Adds a 7-day TTL so items expire automatically.
 
     Key structure:
-      PK (pipeline_job_key) : {workflow_run_id}#{job_name}
-      SK (param_key)        : "config"
+      PK : {workflow_run_id}#{job_name}
+      SK : "config"
     """
     item = {
-        'pipeline_job_key' : f"{workflow_run_id}#{job_name}",
-        'param_key'        : 'config',
+        'PK'               : f"{workflow_run_id}#{job_name}",
+        'SK'               : 'config',
         'workflow_run_id'  : workflow_run_id,
         'job_name'         : job_name,
         'created_at'       : datetime.now(LOCAL_TZ).isoformat(),

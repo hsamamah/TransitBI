@@ -152,8 +152,8 @@ def _read_ddb_params(workflow_run_id: str) -> dict:
     """Read job config from DynamoDB. Raises with chained exception on failure."""
     try:
         resp = ddb_table.get_item(Key={
-            'pipeline_job_key': f"{workflow_run_id}#{JOB_NAME}",
-            'param_key':        'config'
+            'PK': f"{workflow_run_id}#{JOB_NAME}",
+            'SK': 'config'
         })
         item = resp.get('Item')
         if not item:

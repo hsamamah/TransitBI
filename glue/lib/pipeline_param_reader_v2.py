@@ -96,8 +96,8 @@ def read_pipeline_params(job_name: str) -> dict:
 
         try:
             resp = ddb_table.get_item(Key={
-                'pipeline_job_key': f"{workflow_run_id}#{job_name}",
-                'param_key':        'config'
+                'PK': f"{workflow_run_id}#{job_name}",
+                'SK': 'config'
             })
             item = resp.get('Item')
             if not item:

@@ -50,6 +50,9 @@ bash "${SCRIPT_DIR}/deploy_glue.sh" "${ARGS[@]+"${ARGS[@]}"}"
 if ! $GLUE_ONLY; then
     log "STEP 4 — QuickSight"
     bash "${SCRIPT_DIR}/deploy_quicksight.sh" "${ARGS[@]+"${ARGS[@]}"}"
+
+    log "STEP 5 — Notifications"
+    bash "${SCRIPT_DIR}/deploy_notifications.sh" "${ARGS[@]+"${ARGS[@]}"}"
 fi
 
 END=$(date +%s)

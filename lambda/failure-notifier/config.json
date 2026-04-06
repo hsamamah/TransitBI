@@ -1,0 +1,16 @@
+{
+  "FunctionName": "transit-failure-notifier",
+  "Runtime": "python3.12",
+  "Handler": "lambda_function.lambda_handler",
+  "MemorySize": 128,
+  "Timeout": 30,
+  "Environment": {
+    "Variables": {
+      "SNS_TOPIC_ARN": "arn:aws:sns:us-west-2:805699509606:transit-failure-alerts",
+      "REGION": "us-west-2"
+    }
+  },
+  "Layers": [],
+  "Role": "arn:aws:iam::805699509606:role/transit-failure-notifier-role",
+  "Description": "Receives Glue job/workflow failure events from EventBridge and publishes formatted alerts to SNS"
+}

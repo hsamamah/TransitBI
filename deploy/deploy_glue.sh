@@ -301,7 +301,7 @@ upsert_glue_job \
     "gtfs-rt-parse-load-glue" \
     "${SCRIPTS}/gtfs-rt-parse-load-glue.py" \
     10 60 \
-    "\"--iam_role\": \"${REDSHIFT_COPY_ROLE}\""
+    "\"--iam_role\": \"${REDSHIFT_COPY_ROLE}\", \"--additional-python-modules\": \"gtfs-realtime-bindings\""
 
 upsert_glue_job \
     "transit-pipeline-inspector" \

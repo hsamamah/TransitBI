@@ -1,0 +1,13 @@
+{
+    "Name": "VOMS — Vehicles Operated in Maximum Service",
+    "AnalysisId": "a1b2c3d4-voms-0001-0000-transit-bi-dw",
+    "Definition": {
+        "DataSetIdentifierDeclarations": [
+            {
+                "Identifier": "v_voms",
+                "DataSetArn": "arn:aws:quicksight:us-west-2:805699509606:dataset/f866df43-50a4-492d-92f1-14901dee795d"
+            }
+        ]
+    },
+    "ThemeArn": null
+}

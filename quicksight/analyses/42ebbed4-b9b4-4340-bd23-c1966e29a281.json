@@ -1,5 +1,5 @@
 {
-    "Name": "New custom SQL analysis",
+    "Name": "daily_otp_summary",
     "AnalysisId": "42ebbed4-b9b4-4340-bd23-c1966e29a281",
     "Definition": {
         "DataSetIdentifierDeclarations": [

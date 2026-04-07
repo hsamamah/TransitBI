@@ -1,0 +1,82 @@
+{
+    "Name": "vw_dailyvrh analysis",
+    "AnalysisId": "397953c7-07f9-4989-a273-8f6c62df8046",
+    "Definition": {
+        "DataSetIdentifierDeclarations": [
+            {
+                "Identifier": "vw_dailyvrh",
+                "DataSetArn": "arn:aws:quicksight:us-west-2:805699509606:dataset/6b7d786d-ba4a-4b5b-9739-3daf54e5fd8c"
+            }
+        ],
+        "Sheets": [
+            {
+                "SheetId": "03f1220a-26fb-4f16-b3da-49b718ecbcb8",
+                "Name": "Sheet 1",
+                "Visuals": [
+                    {
+                        "EmptyVisual": {
+                            "VisualId": "b2c98ae4-bb4d-485e-b2a9-32aa5bedd2d6",
+                            "DataSetIdentifier": "vw_dailyvrh",
+                            "Actions": []
+                        }
+                    }
+                ],
+                "Layouts": [
+                    {
+                        "Configuration": {
+                            "GridLayout": {
+                                "Elements": [
+                                    {
+                                        "ElementId": "b2c98ae4-bb4d-485e-b2a9-32aa5bedd2d6",
+                                        "ElementType": "VISUAL",
+                                        "ColumnSpan": 18,
+                                        "RowSpan": 12
+                                    }
+                                ],
+                                "CanvasSizeOptions": {
+                                    "ScreenCanvasSizeOptions": {
+                                        "ResizeOption": "FIXED",
+                                        "OptimizedViewPortWidth": "1600px"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "ContentType": "INTERACTIVE"
+            }
+        ],
+        "CalculatedFields": [],
+        "ParameterDeclarations": [],
+        "FilterGroups": [],
+        "AnalysisDefaults": {
+            "DefaultNewSheetConfiguration": {
+                "InteractiveLayoutConfiguration": {
+                    "Grid": {
+                        "CanvasSizeOptions": {
+                            "ScreenCanvasSizeOptions": {
+                                "ResizeOption": "FIXED",
+                                "OptimizedViewPortWidth": "1600px"
+                            }
+                        }
+                    }
+                },
+                "SheetContentType": "INTERACTIVE"
+            }
+        },
+        "Options": {
+            "WeekStart": "SUNDAY",
+            "QBusinessInsightsStatus": "DISABLED",
+            "ExcludedDataSetArns": [],
+            "CustomActionDefaults": {
+                "highlightOperation": {
+                    "Trigger": "DATA_POINT_CLICK"
+                }
+            }
+        },
+        "QueryExecutionOptions": {
+            "QueryExecutionMode": "AUTO"
+        }
+    },
+    "ThemeArn": "arn:aws:quicksight::aws:theme/NITRO"
+}

@@ -1,0 +1,9 @@
+{
+  "_status": "DUPLICATE — resolve before deploying",
+  "_instructions": "Two analyses share this name. Pick the canonical one, export it with --export, and rename to <analysis-id>.json. Delete the other from AWS console.",
+  "name": "vw_dailyvrm analysis",
+  "duplicates": [
+    {"AnalysisId": "0086ff72-5f85-4572-a6a0-e76e2a916189", "Name": "vw_dailyvrm analysis"},
+    {"AnalysisId": "c7fb2486-e51f-4386-a313-7fefffa64284", "Name": "vw_dailyvrm analysis"}
+  ]
+}

@@ -12,15 +12,18 @@
 #   bash deploy/deploy_quicksight.sh              # full deploy
 #   bash deploy/deploy_quicksight.sh --dry-run    # print actions only
 #   bash deploy/deploy_quicksight.sh --refresh-only # SPICE refresh only
+#   bash deploy/deploy_quicksight.sh --export     # export analyses + dashboard → quicksight/
 #
 # Resources managed:
 #   Data source : seattle-transit-dw  (Redshift Serverless via VPC)
 #   Datasets    : 6 SPICE datasets (one per BI view in dw schema)
 #   Folder      : Seattle Transit DW (shared folder, assets + team access)
+#   Analyses    : exported to quicksight/analyses/<id>.json; deployed on full run
+#   Dashboards  : exported to quicksight/dashboards/<id>.json; deployed on full run
 #
-# NOT managed by this script (created manually in console):
-#   Analyses  — QuickSight analysis definitions are not CLI-portable
-#   Dashboards — Same; dashboards reference analyses by ARN
+# Analyses / dashboards with duplicate names in AWS are skipped during deploy
+# and represented as *.placeholder.json files — resolve duplicates in the console
+# first, then re-export with --export.
 #
 # Idempotency:
 #   Data source:      create if not exists, update-data-source if exists
@@ -37,10 +40,12 @@ set -a; source "${SCRIPT_DIR}/config.env"; set +a
 
 DRY_RUN=false
 REFRESH_ONLY=false
+EXPORT_ONLY=false
 for arg in "$@"; do
     case $arg in
         --dry-run)      DRY_RUN=true      ;;
         --refresh-only) REFRESH_ONLY=true ;;
+        --export)       EXPORT_ONLY=true  ;;
     esac
 done
 
@@ -50,6 +55,70 @@ warn() { echo "[$(date '+%H:%M:%S')] ⚠ $*"; }
 dry()  { echo "[$(date '+%H:%M:%S')] DRY-RUN: $*"; }
 
 QS_DIR="${SCRIPT_DIR}/../quicksight"
+
+# --export runs only Step 5 (export) and exits immediately
+if $EXPORT_ONLY; then
+    log "=== [5] Export: analyses + dashboard → quicksight/ ==="
+
+    ANALYSES_DIR="${QS_DIR}/analyses"
+    DASHBOARDS_DIR="${QS_DIR}/dashboards"
+    mkdir -p "${ANALYSES_DIR}" "${DASHBOARDS_DIR}"
+
+    mapfile -t all_analyses < <(
+        aws quicksight list-analyses \
+            --aws-account-id "${ACCOUNT}" \
+            --region "${REGION}" \
+            --query 'AnalysisSummaryList[*].[AnalysisId,Name]' \
+            --output text
+    )
+
+    declare -A name_count=()
+    for row in "${all_analyses[@]}"; do
+        name=$(echo "$row" | cut -f2-)
+        name_count["$name"]=$(( ${name_count["$name"]:-0} + 1 ))
+    done
+
+    exported=0; skipped=0
+    for row in "${all_analyses[@]}"; do
+        id=$(echo "$row" | awk '{print $1}')
+        name=$(echo "$row" | cut -f2-)
+        if [[ ${name_count["$name"]} -gt 1 ]]; then
+            warn "Skipping duplicate analysis: '${name}' (${id}) — resolve in console first"
+            skipped=$(( skipped + 1 ))
+            continue
+        fi
+        aws quicksight describe-analysis-definition \
+            --aws-account-id "${ACCOUNT}" \
+            --analysis-id "${id}" \
+            --region "${REGION}" \
+            --query '{Name:Name,AnalysisId:AnalysisId,Definition:Definition,ThemeArn:ThemeArn}' \
+            > "${ANALYSES_DIR}/${id}.json"
+        ok "Exported analysis: ${name} → quicksight/analyses/${id}.json"
+        exported=$(( exported + 1 ))
+    done
+
+    mapfile -t all_dashboards < <(
+        aws quicksight list-dashboards \
+            --aws-account-id "${ACCOUNT}" \
+            --region "${REGION}" \
+            --query 'DashboardSummaryList[*].[DashboardId,Name]' \
+            --output text
+    )
+    for row in "${all_dashboards[@]}"; do
+        db_id=$(echo "$row" | awk '{print $1}')
+        db_name=$(echo "$row" | cut -f2-)
+        aws quicksight describe-dashboard-definition \
+            --aws-account-id "${ACCOUNT}" \
+            --dashboard-id "${db_id}" \
+            --region "${REGION}" \
+            --query '{Name:Name,DashboardId:DashboardId,Definition:Definition}' \
+            > "${DASHBOARDS_DIR}/${db_id}.json"
+        ok "Exported dashboard: ${db_name} → quicksight/dashboards/${db_id}.json"
+    done
+
+    log "Export complete — ${exported} analyses exported, ${skipped} duplicates skipped"
+    exit 0
+fi
 
 # ── QuickSight resource IDs ───────────────────────────────────
 DATASOURCE_ID="ee6148c5-7ba2-45b8-b4a5-c721e9ab7aca"
@@ -237,12 +306,15 @@ for view_name in "${DATASET_ORDER[@]}"; do
     if $DRY_RUN; then
         dry "TRIGGER SPICE refresh: ${view_name}"
     else
-        ( aws quicksight create-ingestion \
-              --aws-account-id "${ACCOUNT}" \
-              --data-set-id "${dataset_id}" \
-              --ingestion-id "${ingestion_id}" \
-              --region "${REGION}" > /dev/null \
-          && ok "SPICE refresh triggered: ${view_name}" ) &
+        ( if aws quicksight create-ingestion \
+                  --aws-account-id "${ACCOUNT}" \
+                  --data-set-id "${dataset_id}" \
+                  --ingestion-id "${ingestion_id}" \
+                  --region "${REGION}" > /dev/null 2>&1; then
+              ok "SPICE refresh triggered: ${view_name}"
+          else
+              warn "SPICE refresh skipped (already queued): ${view_name}"
+          fi ) &
         pids+=($!)
     fi
 done
@@ -316,6 +388,137 @@ if ! $REFRESH_ONLY; then
         fi
     done
     for pid in "${pids[@]+"${pids[@]}"}"; do wait "$pid"; done
+fi
+
+# =============================================================
+# STEP 5 — Deploy: analyses + dashboard from quicksight/
+# =============================================================
+# Creates or updates analyses and dashboards from the JSON files
+# committed in quicksight/analyses/ and quicksight/dashboards/.
+# Placeholder files (*.placeholder.json) are skipped.
+# =============================================================
+if ! $REFRESH_ONLY; then
+    log "=== [5] Deploy analyses ==="
+
+    ANALYSES_DIR="${QS_DIR}/analyses"
+
+    for def_file in "${ANALYSES_DIR}"/*.json; do
+        # Skip placeholder files
+        [[ "${def_file}" == *.placeholder.json ]] && continue
+        [[ ! -f "${def_file}" ]] && continue
+
+        analysis_id=$(python3 -c "import json,sys; d=json.load(open('${def_file}')); print(d['AnalysisId'])")
+        analysis_name=$(python3 -c "import json,sys; d=json.load(open('${def_file}')); print(d['Name'])")
+        definition=$(python3 -c "import json,sys; d=json.load(open('${def_file}')); print(json.dumps(d['Definition']))")
+        theme_arn=$(python3 -c "import json,sys; d=json.load(open('${def_file}')); print(d.get('ThemeArn') or '')")
+
+        if $DRY_RUN; then
+            dry "UPSERT analysis: ${analysis_name} (${analysis_id})"
+            dry "ADD analysis to shared folder: ${analysis_name}"
+            continue
+        fi
+
+        # Check if analysis exists
+        if aws quicksight describe-analysis \
+                --aws-account-id "${ACCOUNT}" \
+                --analysis-id "${analysis_id}" \
+                --region "${REGION}" > /dev/null 2>&1; then
+
+            update_args=(
+                --aws-account-id "${ACCOUNT}"
+                --analysis-id "${analysis_id}"
+                --name "${analysis_name}"
+                --definition "${definition}"
+                --region "${REGION}"
+            )
+            [[ -n "${theme_arn}" ]] && update_args+=(--theme-arn "${theme_arn}")
+            if aws quicksight update-analysis "${update_args[@]}" > /dev/null 2>&1; then
+                ok "Updated analysis: ${analysis_name}"
+            else
+                warn "Update skipped (stale dataset reference?): ${analysis_name} — re-export after fixing in console"
+            fi
+        else
+            create_args=(
+                --aws-account-id "${ACCOUNT}"
+                --analysis-id "${analysis_id}"
+                --name "${analysis_name}"
+                --definition "${definition}"
+                --permissions "[{\"Principal\": \"${QS_PRINCIPAL}\", \"Actions\": [\"quicksight:RestoreAnalysis\",\"quicksight:UpdateAnalysisPermissions\",\"quicksight:DeleteAnalysis\",\"quicksight:DescribeAnalysisPermissions\",\"quicksight:QueryAnalysis\",\"quicksight:DescribeAnalysis\",\"quicksight:UpdateAnalysis\"]}]"
+                --region "${REGION}"
+            )
+            [[ -n "${theme_arn}" ]] && create_args+=(--theme-arn "${theme_arn}")
+            if aws quicksight create-analysis "${create_args[@]}" > /dev/null 2>&1; then
+                ok "Created analysis: ${analysis_name}"
+            else
+                warn "Create failed (stale dataset reference?): ${analysis_name} — re-export after fixing in console"
+            fi
+        fi
+
+        # Add to shared folder (idempotent — suppress AlreadyExists)
+        if aws quicksight create-folder-membership \
+                --aws-account-id "${ACCOUNT}" \
+                --folder-id "${FOLDER_ID}" \
+                --member-id "${analysis_id}" \
+                --member-type ANALYSIS \
+                --region "${REGION}" > /dev/null 2>&1; then
+            ok "Folder member (analysis): ${analysis_name}"
+        else
+            warn "Folder membership skipped (already exists): ${analysis_name}"
+        fi
+    done
+
+    log "=== [6] Deploy dashboards ==="
+
+    DASHBOARDS_DIR="${QS_DIR}/dashboards"
+
+    for def_file in "${DASHBOARDS_DIR}"/*.json; do
+        [[ ! -f "${def_file}" ]] && continue
+
+        dashboard_id=$(python3 -c "import json,sys; d=json.load(open('${def_file}')); print(d['DashboardId'])")
+        dashboard_name=$(python3 -c "import json,sys; d=json.load(open('${def_file}')); print(d['Name'])")
+        definition=$(python3 -c "import json,sys; d=json.load(open('${def_file}')); print(json.dumps(d['Definition']))")
+
+        if $DRY_RUN; then
+            dry "UPSERT dashboard: ${dashboard_name} (${dashboard_id})"
+            dry "ADD dashboard to shared folder: ${dashboard_name}"
+            continue
+        fi
+
+        if aws quicksight describe-dashboard \
+                --aws-account-id "${ACCOUNT}" \
+                --dashboard-id "${dashboard_id}" \
+                --region "${REGION}" > /dev/null 2>&1; then
+
+            aws quicksight update-dashboard \
+                --aws-account-id "${ACCOUNT}" \
+                --dashboard-id "${dashboard_id}" \
+                --name "${dashboard_name}" \
+                --definition "${definition}" \
+                --region "${REGION}" > /dev/null
+            ok "Updated dashboard: ${dashboard_name}"
+        else
+            aws quicksight create-dashboard \
+                --aws-account-id "${ACCOUNT}" \
+                --dashboard-id "${dashboard_id}" \
+                --name "${dashboard_name}" \
+                --definition "${definition}" \
+                --permissions "[{\"Principal\": \"${QS_PRINCIPAL}\", \"Actions\": [\"quicksight:DescribeDashboard\",\"quicksight:ListDashboardVersions\",\"quicksight:UpdateDashboardPermissions\",\"quicksight:QueryDashboard\",\"quicksight:UpdateDashboard\",\"quicksight:DeleteDashboard\",\"quicksight:UpdateDashboardPublishedVersion\",\"quicksight:DescribeDashboardPermissions\"]}]" \
+                --region "${REGION}" > /dev/null
+            ok "Created dashboard: ${dashboard_name}"
+        fi
+
+        # Add to shared folder (idempotent — suppress AlreadyExists)
+        if aws quicksight create-folder-membership \
+                --aws-account-id "${ACCOUNT}" \
+                --folder-id "${FOLDER_ID}" \
+                --member-id "${dashboard_id}" \
+                --member-type DASHBOARD \
+                --region "${REGION}" > /dev/null 2>&1; then
+            ok "Folder member (dashboard): ${dashboard_name}"
+        else
+            warn "Folder membership skipped (already exists): ${dashboard_name}"
+        fi
+    done
 fi
 
 log "=== QuickSight deploy complete ==="

@@ -1,0 +1,681 @@
+{
+    "Name": "Seattle Transit RT Pipeline — Coverage Dashboard",
+    "DashboardId": "18f88e3f-47ef-4d0a-a899-27e76bc870a4",
+    "Definition": {
+        "DataSetIdentifierDeclarations": [
+            {
+                "Identifier": "vw_otp_by_route_month",
+                "DataSetArn": "arn:aws:quicksight:us-west-2:805699509606:dataset/61f642a5-d9a8-4d26-b485-73f5d5615069"
+            }
+        ],
+        "Sheets": [
+            {
+                "SheetId": "18f88e3f-47ef-4d0a-a899-27e76bc870a4_197b59eb-6d9d-4036-b2fd-96b767505963",
+                "Name": "Seattle Transit Real-Time Pipeline — Coverage Dashboard",
+                "Visuals": [
+                    {
+                        "BarChartVisual": {
+                            "VisualId": "18f88e3f-47ef-4d0a-a899-27e76bc870a4_f58c1c2e-7d52-4730-ad06-380043ba270a",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>\n  <inline font-size=\"16px\">\n    <b>Stop-Level Observations by Route — March 2026  </b>\n  </inline>\n  <b>\n    <i>Top 10</i>\n  </b>\n</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "BarChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "vw_otp_by-routeshor-9388a5.0.1775013005202",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_otp_by_route_month",
+                                                        "ColumnName": "routeshortname"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "vw_otp_by-total_obs-ee9709.1.1775013018831",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_otp_by_route_month",
+                                                        "ColumnName": "total_obs"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": []
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "vw_otp_by-total_obs-ee9709.1.1775013018831",
+                                                "Direction": "DESC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimit": {
+                                        "ItemsLimit": 20,
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "ColorItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "SmallMultiplesLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "Orientation": "HORIZONTAL",
+                                "BarsArrangement": "CLUSTERED",
+                                "CategoryAxis": {
+                                    "TickLabelOptions": {
+                                        "LabelOptions": {
+                                            "FontConfiguration": {
+                                                "FontSize": {
+                                                    "Absolute": "8px"
+                                                },
+                                                "FontWeight": {
+                                                    "Name": "BOLD"
+                                                },
+                                                "FontStyle": "ITALIC"
+                                            }
+                                        }
+                                    },
+                                    "AxisLineVisibility": "VISIBLE",
+                                    "ScrollbarOptions": {
+                                        "Visibility": "HIDDEN",
+                                        "VisibleRange": {
+                                            "PercentRange": {
+                                                "From": 37.5,
+                                                "To": 87.5
+                                            }
+                                        }
+                                    },
+                                    "AxisOffset": "28px"
+                                },
+                                "CategoryLabelOptions": {
+                                    "SortIconVisibility": "VISIBLE",
+                                    "AxisLabelOptions": [
+                                        {
+                                            "FontConfiguration": {
+                                                "FontSize": {
+                                                    "Absolute": "8px"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                },
+                                "ValueAxis": {
+                                    "DataOptions": {
+                                        "NumericAxisOptions": {
+                                            "Range": {
+                                                "MinMax": {
+                                                    "Minimum": 0.0
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "AxisOffset": "66px"
+                                },
+                                "DataLabels": {
+                                    "Visibility": "HIDDEN",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "PRIMARY_VALUE",
+                                        "TooltipFields": [
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_otp_by-routeshor-9388a5.0.1775013005202",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_otp_by-total_obs-ee9709.1.1775013018831",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "PieChartVisual": {
+                            "VisualId": "18f88e3f-47ef-4d0a-a899-27e76bc870a4_e0803b7b-d092-4d88-b9fe-a657beb514bb",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Bus vs Light Rail Distribution</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "PieChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "vw_otp_by-mode-f2be28.0.1775014650238",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_otp_by_route_month",
+                                                        "ColumnName": "mode"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "vw_otp_by-total_obs-ee9709.1.1775014655990",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_otp_by_route_month",
+                                                        "ColumnName": "total_obs"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "vw_otp_by-total_obs-ee9709.1.1775014655990",
+                                                "Direction": "DESC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "SmallMultiplesLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "DonutOptions": {
+                                    "ArcOptions": {
+                                        "ArcThickness": "MEDIUM"
+                                    }
+                                },
+                                "DataLabels": {
+                                    "Visibility": "VISIBLE",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "PRIMARY_VALUE",
+                                        "TooltipFields": [
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_otp_by-mode-f2be28.0.1775014650238",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_otp_by-total_obs-ee9709.1.1775014655990",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "KPIVisual": {
+                            "VisualId": "18f88e3f-47ef-4d0a-a899-27e76bc870a4_b026ae58-c481-4460-8df1-b1efb2eff8f5",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Total observation</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "Values": [
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "vw_otp_by-total_obs-ee9709.0.1775014790169",
+                                                "Column": {
+                                                    "DataSetIdentifier": "vw_otp_by_route_month",
+                                                    "ColumnName": "total_obs"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "SUM"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "TargetValues": [],
+                                    "TrendGroups": []
+                                },
+                                "SortConfiguration": {},
+                                "KPIOptions": {
+                                    "Comparison": {
+                                        "ComparisonMethod": "PERCENT_DIFFERENCE"
+                                    },
+                                    "PrimaryValueDisplayType": "ACTUAL",
+                                    "SecondaryValueFontConfiguration": {
+                                        "FontSize": {
+                                            "Relative": "EXTRA_LARGE"
+                                        }
+                                    },
+                                    "Sparkline": {
+                                        "Visibility": "VISIBLE",
+                                        "Type": "AREA"
+                                    },
+                                    "VisualLayoutOptions": {
+                                        "StandardLayout": {
+                                            "Type": "VERTICAL"
+                                        }
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "KPIVisual": {
+                            "VisualId": "18f88e3f-47ef-4d0a-a899-27e76bc870a4_7e002477-94d3-47a6-a17c-081994dd631c",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Routes number</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "Values": [
+                                        {
+                                            "CategoricalMeasureField": {
+                                                "FieldId": "vw_otp_by-routeshor-9388a5.0.1775014813840",
+                                                "Column": {
+                                                    "DataSetIdentifier": "vw_otp_by_route_month",
+                                                    "ColumnName": "routeshortname"
+                                                },
+                                                "AggregationFunction": "DISTINCT_COUNT"
+                                            }
+                                        }
+                                    ],
+                                    "TargetValues": [],
+                                    "TrendGroups": []
+                                },
+                                "SortConfiguration": {},
+                                "KPIOptions": {
+                                    "Comparison": {
+                                        "ComparisonMethod": "PERCENT_DIFFERENCE"
+                                    },
+                                    "PrimaryValueDisplayType": "ACTUAL",
+                                    "SecondaryValueFontConfiguration": {
+                                        "FontSize": {
+                                            "Relative": "EXTRA_LARGE"
+                                        }
+                                    },
+                                    "Sparkline": {
+                                        "Visibility": "VISIBLE",
+                                        "Type": "AREA"
+                                    },
+                                    "VisualLayoutOptions": {
+                                        "StandardLayout": {
+                                            "Type": "VERTICAL"
+                                        }
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "KPIVisual": {
+                            "VisualId": "18f88e3f-47ef-4d0a-a899-27e76bc870a4_b5636e1e-c98d-4b15-b99b-9f4ab915373c",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Average OPT</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "Values": [
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "vw_otp_by-otp_pct-26a274.0.1775014932369",
+                                                "Column": {
+                                                    "DataSetIdentifier": "vw_otp_by_route_month",
+                                                    "ColumnName": "otp_pct"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "AVERAGE"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "TargetValues": [],
+                                    "TrendGroups": []
+                                },
+                                "SortConfiguration": {},
+                                "KPIOptions": {
+                                    "Comparison": {
+                                        "ComparisonMethod": "PERCENT_DIFFERENCE"
+                                    },
+                                    "PrimaryValueDisplayType": "ACTUAL",
+                                    "SecondaryValueFontConfiguration": {
+                                        "FontSize": {
+                                            "Relative": "EXTRA_LARGE"
+                                        }
+                                    },
+                                    "Sparkline": {
+                                        "Visibility": "VISIBLE",
+                                        "Type": "AREA"
+                                    },
+                                    "VisualLayoutOptions": {
+                                        "StandardLayout": {
+                                            "Type": "VERTICAL"
+                                        }
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "TableVisual": {
+                            "VisualId": "18f88e3f-47ef-4d0a-a899-27e76bc870a4_2547c761-61e5-4fc2-bb6d-019ebd954ba0",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Route Performance Detail</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "TableAggregatedFieldWells": {
+                                        "GroupBy": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "vw_otp_by-routeshor-9388a5.0.1775015203493",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_otp_by_route_month",
+                                                        "ColumnName": "routeshortname"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "vw_otp_by-routelong-a70d88.1.1775015205544",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_otp_by_route_month",
+                                                        "ColumnName": "routelongname"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "vw_otp_by-mode-f2be28.2.1775015210059",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_otp_by_route_month",
+                                                        "ColumnName": "mode"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "NumericalDimensionField": {
+                                                    "FieldId": "vw_otp_by-total_obs-ee9709.3.1775015213891",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_otp_by_route_month",
+                                                        "ColumnName": "total_obs"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "NumericalDimensionField": {
+                                                    "FieldId": "vw_otp_by-ontime-b7a94e.4.1775015224995",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_otp_by_route_month",
+                                                        "ColumnName": "ontime"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "NumericalDimensionField": {
+                                                    "FieldId": "vw_otp_by-otp_pct-26a274.5.1775015227190",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_otp_by_route_month",
+                                                        "ColumnName": "otp_pct"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Values": []
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "RowSort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "vw_otp_by-total_obs-ee9709.3.1775015213891",
+                                                "Direction": "DESC"
+                                            }
+                                        }
+                                    ],
+                                    "PaginationConfiguration": {
+                                        "PageSize": 100,
+                                        "PageNumber": 1
+                                    }
+                                }
+                            },
+                            "Actions": []
+                        }
+                    }
+                ],
+                "TextBoxes": [
+                    {
+                        "SheetTextBoxId": "a70ae3e2-3b0d-4426-a85e-b0b3f7b096ee",
+                        "Content": "<text-box>\n  <inline font-size=\"16px\">\n    <b>Data source:</b>\n  </inline>\n  <inline font-size=\"16px\"> </inline>\n  GTFS-RT via \n  <u>OneBusAway API (TEST key)</u>\n  .\n  <br/>\n  —— \n  <inline font-size=\"12px\">\n    <i>OTP shows 100% because test key returns predicted times, not observed deviations. Pipeline is production-ready — switching to a production key will immediately populate real OTP metrics.</i>\n  </inline>\n</text-box>"
+                    }
+                ],
+                "Layouts": [
+                    {
+                        "Configuration": {
+                            "GridLayout": {
+                                "Elements": [
+                                    {
+                                        "ElementId": "18f88e3f-47ef-4d0a-a899-27e76bc870a4_b026ae58-c481-4460-8df1-b1efb2eff8f5",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 2,
+                                        "ColumnSpan": 8,
+                                        "RowIndex": 0,
+                                        "RowSpan": 5,
+                                        "SelectedBorderStyle": {
+                                            "Color": "#000000"
+                                        }
+                                    },
+                                    {
+                                        "ElementId": "18f88e3f-47ef-4d0a-a899-27e76bc870a4_7e002477-94d3-47a6-a17c-081994dd631c",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 13,
+                                        "ColumnSpan": 7,
+                                        "RowIndex": 0,
+                                        "RowSpan": 5
+                                    },
+                                    {
+                                        "ElementId": "18f88e3f-47ef-4d0a-a899-27e76bc870a4_b5636e1e-c98d-4b15-b99b-9f4ab915373c",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 23,
+                                        "ColumnSpan": 7,
+                                        "RowIndex": 0,
+                                        "RowSpan": 5
+                                    },
+                                    {
+                                        "ElementId": "18f88e3f-47ef-4d0a-a899-27e76bc870a4_f58c1c2e-7d52-4730-ad06-380043ba270a",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 0,
+                                        "ColumnSpan": 17,
+                                        "RowIndex": 5,
+                                        "RowSpan": 8,
+                                        "BorderStyle": {
+                                            "Width": "1px"
+                                        },
+                                        "BackgroundStyle": {
+                                            "Visibility": "VISIBLE",
+                                            "Color": "#FFFFFFD9"
+                                        },
+                                        "Padding": "12px"
+                                    },
+                                    {
+                                        "ElementId": "18f88e3f-47ef-4d0a-a899-27e76bc870a4_e0803b7b-d092-4d88-b9fe-a657beb514bb",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 18,
+                                        "ColumnSpan": 14,
+                                        "RowIndex": 5,
+                                        "RowSpan": 8
+                                    },
+                                    {
+                                        "ElementId": "18f88e3f-47ef-4d0a-a899-27e76bc870a4_2547c761-61e5-4fc2-bb6d-019ebd954ba0",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 5,
+                                        "ColumnSpan": 23,
+                                        "RowIndex": 13,
+                                        "RowSpan": 12
+                                    },
+                                    {
+                                        "ElementId": "a70ae3e2-3b0d-4426-a85e-b0b3f7b096ee",
+                                        "ElementType": "TEXT_BOX",
+                                        "ColumnIndex": 5,
+                                        "ColumnSpan": 23,
+                                        "RowIndex": 25,
+                                        "RowSpan": 2,
+                                        "BorderStyle": {
+                                            "Width": "2px"
+                                        },
+                                        "BackgroundStyle": {
+                                            "Visibility": "VISIBLE",
+                                            "Color": "#FFFFFFD9"
+                                        },
+                                        "Padding": "8px"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "ContentType": "INTERACTIVE"
+            }
+        ],
+        "CalculatedFields": [],
+        "ParameterDeclarations": [],
+        "FilterGroups": [
+            {
+                "FilterGroupId": "d1abbe0f-7f2d-4a31-ae85-4be88bf9ea89",
+                "Filters": [
+                    {
+                        "TopBottomFilter": {
+                            "FilterId": "5a352236-a907-4f68-b54e-5e793dbcbc5d",
+                            "Column": {
+                                "DataSetIdentifier": "vw_otp_by_route_month",
+                                "ColumnName": "routeshortname"
+                            },
+                            "Limit": 10,
+                            "AggregationSortConfigurations": [
+                                {
+                                    "Column": {
+                                        "DataSetIdentifier": "vw_otp_by_route_month",
+                                        "ColumnName": "total_obs"
+                                    },
+                                    "SortDirection": "DESC",
+                                    "AggregationFunction": {
+                                        "NumericalAggregationFunction": {
+                                            "SimpleNumericalAggregation": "SUM"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "ScopeConfiguration": {
+                    "SelectedSheets": {
+                        "SheetVisualScopingConfigurations": [
+                            {
+                                "SheetId": "18f88e3f-47ef-4d0a-a899-27e76bc870a4_197b59eb-6d9d-4036-b2fd-96b767505963",
+                                "Scope": "SELECTED_VISUALS",
+                                "VisualIds": [
+                                    "18f88e3f-47ef-4d0a-a899-27e76bc870a4_f58c1c2e-7d52-4730-ad06-380043ba270a"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "Status": "ENABLED",
+                "CrossDataset": "SINGLE_DATASET"
+            }
+        ],
+        "AnalysisDefaults": {
+            "DefaultNewSheetConfiguration": {
+                "InteractiveLayoutConfiguration": {
+                    "Grid": {
+                        "CanvasSizeOptions": {
+                            "ScreenCanvasSizeOptions": {
+                                "ResizeOption": "FIXED",
+                                "OptimizedViewPortWidth": "1600px"
+                            }
+                        }
+                    }
+                },
+                "SheetContentType": "INTERACTIVE"
+            }
+        },
+        "Options": {
+            "WeekStart": "SUNDAY",
+            "QBusinessInsightsStatus": "DISABLED",
+            "ExcludedDataSetArns": []
+        }
+    }
+}

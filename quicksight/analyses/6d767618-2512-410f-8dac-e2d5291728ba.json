@@ -1,0 +1,184 @@
+{
+    "Name": "facttrip analysis",
+    "AnalysisId": "6d767618-2512-410f-8dac-e2d5291728ba",
+    "Definition": {
+        "DataSetIdentifierDeclarations": [
+            {
+                "Identifier": "facttrip",
+                "DataSetArn": "arn:aws:quicksight:us-west-2:805699509606:dataset/7af337d9-e164-4104-bdb6-4199a7a800dd"
+            }
+        ],
+        "Sheets": [
+            {
+                "SheetId": "64712f29-e810-49d7-aa4a-ba2bfdc91f9b",
+                "Name": "Sheet 1",
+                "Visuals": [
+                    {
+                        "KPIVisual": {
+                            "VisualId": "e3c93156-1d59-4f52-9ffc-cfb3be4946db",
+                            "Title": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "Values": [
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "facttrip-isofficia-df987d.0.1774994903179",
+                                                "Column": {
+                                                    "DataSetIdentifier": "facttrip",
+                                                    "ColumnName": "facttrip-isofficia-df987d"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "SUM"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "TargetValues": [],
+                                    "TrendGroups": [
+                                        {
+                                            "NumericalDimensionField": {
+                                                "FieldId": "facttrip-versionke-e5f89b.1.1774994938212",
+                                                "Column": {
+                                                    "DataSetIdentifier": "facttrip",
+                                                    "ColumnName": "facttrip-versionke-e5f89b"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                },
+                                "SortConfiguration": {
+                                    "TrendGroupSort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "facttrip-isofficia-df987d.0.1774994903179",
+                                                "Direction": "DESC"
+                                            }
+                                        }
+                                    ]
+                                },
+                                "KPIOptions": {
+                                    "Comparison": {
+                                        "ComparisonMethod": "PERCENT_DIFFERENCE"
+                                    },
+                                    "PrimaryValueDisplayType": "ACTUAL",
+                                    "SecondaryValueFontConfiguration": {
+                                        "FontSize": {
+                                            "Relative": "EXTRA_LARGE"
+                                        }
+                                    },
+                                    "Sparkline": {
+                                        "Visibility": "VISIBLE",
+                                        "Type": "AREA"
+                                    },
+                                    "VisualLayoutOptions": {
+                                        "StandardLayout": {
+                                            "Type": "VERTICAL"
+                                        }
+                                    }
+                                }
+                            },
+                            "ConditionalFormatting": {
+                                "ConditionalFormattingOptions": [
+                                    {
+                                        "ComparisonValue": {
+                                            "TextColor": {
+                                                "Solid": {
+                                                    "Expression": "percentDifference(SUM({facttrip-isofficia-df987d}),[SUM({facttrip-isofficia-df987d}) DESC],1,[]) > 0.0",
+                                                    "Color": "#2CAD00"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "ComparisonValue": {
+                                            "TextColor": {
+                                                "Solid": {
+                                                    "Expression": "percentDifference(SUM({facttrip-isofficia-df987d}),[SUM({facttrip-isofficia-df987d}) DESC],1,[]) < 0.0",
+                                                    "Color": "#DE3B00"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "ComparisonValue": {
+                                            "Icon": {
+                                                "CustomCondition": {
+                                                    "Expression": "percentDifference(SUM({facttrip-isofficia-df987d}),[SUM({facttrip-isofficia-df987d}) DESC],1,[]) > 0.0",
+                                                    "IconOptions": {
+                                                        "Icon": "CARET_UP"
+                                                    },
+                                                    "Color": "#2CAD00"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "ComparisonValue": {
+                                            "Icon": {
+                                                "CustomCondition": {
+                                                    "Expression": "percentDifference(SUM({facttrip-isofficia-df987d}),[SUM({facttrip-isofficia-df987d}) DESC],1,[]) < 0.0",
+                                                    "IconOptions": {
+                                                        "Icon": "CARET_DOWN"
+                                                    },
+                                                    "Color": "#DE3B00"
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    }
+                ],
+                "Layouts": [
+                    {
+                        "Configuration": {
+                            "GridLayout": {
+                                "Elements": [
+                                    {
+                                        "ElementId": "e3c93156-1d59-4f52-9ffc-cfb3be4946db",
+                                        "ElementType": "VISUAL",
+                                        "ColumnSpan": 18,
+                                        "RowSpan": 12
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "ContentType": "INTERACTIVE"
+            }
+        ],
+        "CalculatedFields": [],
+        "ParameterDeclarations": [],
+        "FilterGroups": [],
+        "AnalysisDefaults": {
+            "DefaultNewSheetConfiguration": {
+                "InteractiveLayoutConfiguration": {
+                    "Grid": {
+                        "CanvasSizeOptions": {
+                            "ScreenCanvasSizeOptions": {
+                                "ResizeOption": "FIXED",
+                                "OptimizedViewPortWidth": "1600px"
+                            }
+                        }
+                    }
+                },
+                "SheetContentType": "INTERACTIVE"
+            }
+        },
+        "Options": {
+            "WeekStart": "SUNDAY",
+            "QBusinessInsightsStatus": "DISABLED",
+            "ExcludedDataSetArns": []
+        }
+    },
+    "ThemeArn": "arn:aws:quicksight::aws:theme/NITRO"
+}

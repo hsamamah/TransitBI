@@ -95,13 +95,20 @@ submit_job() {
         return
     fi
 
-    aws glue start-job-run \
-        --job-name "${job_name}" \
-        --arguments "${args_json}" \
-        --timeout "${timeout_min}" \
-        --region "${REGION}" \
-        --output text \
-        --query 'JobRunId'
+    local attempt run_id
+    for attempt in 1 2 3; do
+        run_id=$(aws glue start-job-run \
+            --job-name "${job_name}" \
+            --arguments "${args_json}" \
+            --timeout "${timeout_min}" \
+            --region "${REGION}" \
+            --output text \
+            --query 'JobRunId' 2>&1) && echo "${run_id}" && return
+        echo "    WARN: start-job-run attempt ${attempt}/3 failed — ${run_id}"
+        sleep $((attempt * 15))
+    done
+    echo "  ERROR: failed to submit ${job_name} after 3 attempts" >&2
+    exit 1
 }
 
 # Wait for a list of "JOB_NAME:RUN_ID" pairs to all reach a terminal state.
@@ -143,7 +150,7 @@ wait_for_jobs() {
         done
     done
 
-    $failed && { echo ""; echo "  ERROR: One or more Glue jobs failed — aborting backload."; exit 1; }
+    if $failed; then echo ""; echo "  ERROR: One or more Glue jobs failed — aborting backload."; exit 1; fi
 }
 
 # ── Cost estimate ─────────────────────────────────────────────
@@ -197,6 +204,9 @@ for dt in $(date_range); do
     info "  Waiting for completion..."
     wait_for_jobs "gtfs-rt-parse-load-glue:${run_id}"
     info "  Done: ${dt}"
+    # Brief pause — Glue's concurrency slot isn't released instantly
+    # after SUCCEEDED; without this the next StartJobRun races.
+    sleep 10
 done
 
 

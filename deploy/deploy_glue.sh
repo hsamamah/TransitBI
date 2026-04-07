@@ -125,6 +125,8 @@ upsert_glue_job() {
     fi
     default_args+="}"
 
+    local max_concurrent="${6:-1}"
+
     local job_json="{
         \"Role\": \"${GLUE_ROLE}\",
         \"GlueVersion\": \"${GLUE_VERSION}\",
@@ -132,6 +134,7 @@ upsert_glue_job() {
         \"NumberOfWorkers\": ${workers},
         \"Timeout\": ${timeout},
         \"MaxRetries\": 0,
+        \"ExecutionProperty\": {\"MaxConcurrentRuns\": ${max_concurrent}},
         \"Command\": {
             \"Name\": \"glueetl\",
             \"ScriptLocation\": \"${script}\",
@@ -301,7 +304,8 @@ upsert_glue_job \
     "gtfs-rt-parse-load-glue" \
     "${SCRIPTS}/gtfs-rt-parse-load-glue.py" \
     4 20 \
-    "\"--iam_role\": \"${REDSHIFT_COPY_ROLE}\", \"--additional-python-modules\": \"gtfs-realtime-bindings\""
+    "\"--iam_role\": \"${REDSHIFT_COPY_ROLE}\", \"--additional-python-modules\": \"gtfs-realtime-bindings\"" \
+    3
 
 upsert_glue_job \
     "transit-pipeline-inspector" \

@@ -133,26 +133,24 @@ bash deploy/deploy_quicksight.sh --refresh-only # trigger SPICE refresh only
 
 ## Pipeline Architecture
 
-```
-EventBridge (cron)
-      │
-      ├── 07:00 PST → gtfs-static-pipeline
-      │     gtfs-static-ingestion
-      │     → gtfs-static-crawler
-      │     → gtfs-static-validation
-      │     → gtfs-static-redshift-load
-      │
-      └── 08:00 PST → gtfs-rt-daily-pipeline
-            gtfs-rt-parse-load-glue
-            → transit-pipeline-inspector     (gap detection + DynamoDB params)
-            → factstop-skeleton-and-merge-load
-            → facttrip-skeleton-and-merge-load
-            → factserviceday-load
-```
+![AWS Architecture](docs/images/aws_architecture.png)
+
+### Data Flow
+
+![Data Flow](docs/images/data_flow.png)
+
+> **Regenerate diagrams** after architecture changes:
+> ```bash
+> docs/.venv/bin/python docs/generate_diagrams.py
+> ```
+> First-time setup: `python3 -m venv docs/.venv && docs/.venv/bin/pip install -r docs/requirements.txt`
+> Requires `graphviz` system package (`pacman -S graphviz` / `brew install graphviz` / `apt install graphviz`).
 
 ---
 
 ## Failure Alerting
+
+![Alerting Flow](docs/images/alerting_flow.png)
 
 All Glue job/workflow failures and Lambda errors send immediate email alerts via the `transit-failure-alerts` SNS topic.
 

@@ -32,6 +32,7 @@ import os
 import csv
 import io
 import time
+import threading
 import boto3
 import pytz
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -72,8 +73,17 @@ AGENCIES = {
 SCHEDULE_REL_MAP = {0: 'SCHEDULED', 1: 'ADDED', 2: 'UNSCHEDULED', 3: 'CANCELED'}
 VP_STATUS_MAP    = {0: 'INCOMING_AT', 1: 'STOPPED_AT', 2: 'IN_TRANSIT_TO'}
 
+# Module-level client for single-threaded use (Redshift, S3 listings, CSV writes)
 s3       = boto3.client('s3',              region_name=REGION)
 rs_data  = boto3.client('redshift-data',   region_name=REGION)
+
+# Per-thread S3 clients for parallel reads — boto3 clients are not thread-safe
+_thread_local = threading.local()
+
+def _get_thread_s3():
+    if not hasattr(_thread_local, 's3'):
+        _thread_local.s3 = boto3.client('s3', region_name=REGION)
+    return _thread_local.s3
 
 # ============================================================
 # 2. Date Resolution
@@ -107,7 +117,7 @@ def list_pb_files(agency, feed_type, date_str):
 def read_pb_from_s3(s3_key):
     """Download and parse a single .pb file. Returns FeedMessage or None."""
     try:
-        resp = s3.get_object(Bucket=RAW_BUCKET, Key=s3_key)
+        resp = _get_thread_s3().get_object(Bucket=RAW_BUCKET, Key=s3_key)
         raw  = resp['Body'].read()
         if not raw or len(raw) < 100:
             return None
@@ -174,52 +184,52 @@ def extract_trip_updates(feed, agency_key):
     for entity in feed.entity:
         if not entity.HasField('trip_update'):
             continue
-        tu = entity.trip_update
+        tu   = entity.trip_update
+        trip = tu.trip  # cache — accessed many times per stop_time_update
+
+        # Per-trip fields: constant across all stop_time_updates for this entity
+        dir_id            = trip.direction_id
+        direction         = str(dir_id) if dir_id in (0, 1) else ''
+        trip_id           = trip.trip_id
+        route_id          = trip.route_id or ''
+        schedule_rel      = SCHEDULE_REL_MAP.get(trip.schedule_relationship, 'UNKNOWN')
+        feed_ts_str       = feed_dt_utc.strftime('%Y-%m-%d %H:%M:%S')
 
         for stu in tu.stop_time_update:
-            # direction_id is a scalar int — HasField() would raise ValueError
-            dir_id = tu.trip.direction_id
-            direction = str(dir_id) if dir_id in (0, 1) else ''
+            has_arrival   = stu.HasField('arrival')
+            has_departure = stu.HasField('departure')
 
-            record = {
+            arr_time_utc  = stu.arrival.time   if has_arrival   and stu.arrival.time > 0   else ''
+            dep_time_utc  = stu.departure.time if has_departure and stu.departure.time > 0 else ''
+
+            arr_time_local = ''
+            if arr_time_utc:
+                arr_time_local = datetime.fromtimestamp(
+                    arr_time_utc, tz=timezone.utc).astimezone(LOCAL_TZ).strftime('%Y-%m-%d %H:%M:%S')
+
+            dep_time_local = ''
+            if dep_time_utc:
+                dep_time_local = datetime.fromtimestamp(
+                    dep_time_utc, tz=timezone.utc).astimezone(LOCAL_TZ).strftime('%Y-%m-%d %H:%M:%S')
+
+            records.append({
                 'agency_key':            agency_key,
-                'trip_id':               tu.trip.trip_id,
-                'route_id':              tu.trip.route_id or '',
+                'trip_id':               trip_id,
+                'route_id':              route_id,
                 'direction_id':          direction,
-                'schedule_relationship': SCHEDULE_REL_MAP.get(
-                                             tu.trip.schedule_relationship, 'UNKNOWN'),
+                'schedule_relationship': schedule_rel,
                 'service_date':          service_date,
                 'stop_id':               stu.stop_id,
                 'stop_sequence':         stu.stop_sequence,
-                'arrival_delay':         stu.arrival.delay
-                                             if stu.HasField('arrival') else '',
-                'arrival_time_utc':      stu.arrival.time
-                                             if stu.HasField('arrival') and stu.arrival.time > 0
-                                             else '',
-                'arrival_time_local':    '',
-                'departure_delay':       stu.departure.delay
-                                             if stu.HasField('departure') else '',
-                'departure_time_utc':    stu.departure.time
-                                             if stu.HasField('departure') and stu.departure.time > 0
-                                             else '',
-                'departure_time_local':  '',
-                'feed_timestamp_utc':    feed_dt_utc.strftime('%Y-%m-%d %H:%M:%S'),
-                'arrival_source':        'GTFS_RT_REPORTED'
-                                             if stu.HasField('arrival')
-                                             else 'FALLBACK_SCHEDULED',
-            }
-
-            if record['arrival_time_utc']:
-                dt = datetime.fromtimestamp(record['arrival_time_utc'], tz=timezone.utc)
-                record['arrival_time_local'] = dt.astimezone(LOCAL_TZ).strftime(
-                    '%Y-%m-%d %H:%M:%S')
-
-            if record['departure_time_utc']:
-                dt = datetime.fromtimestamp(record['departure_time_utc'], tz=timezone.utc)
-                record['departure_time_local'] = dt.astimezone(LOCAL_TZ).strftime(
-                    '%Y-%m-%d %H:%M:%S')
-
-            records.append(record)
+                'arrival_delay':         stu.arrival.delay   if has_arrival   else '',
+                'arrival_time_utc':      arr_time_utc,
+                'arrival_time_local':    arr_time_local,
+                'departure_delay':       stu.departure.delay if has_departure else '',
+                'departure_time_utc':    dep_time_utc,
+                'departure_time_local':  dep_time_local,
+                'feed_timestamp_utc':    feed_ts_str,
+                'arrival_source':        'GTFS_RT_REPORTED' if has_arrival else 'FALLBACK_SCHEDULED',
+            })
 
     return records
 
@@ -267,7 +277,7 @@ def deduplicate_latest(records, key_fields, sort_field):
     unique = {}
     for r in records:
         key = tuple(r.get(f, '') for f in key_fields)
-        if key not in unique or str(r.get(sort_field, '')) > str(unique[key].get(sort_field, '')):
+        if key not in unique or r.get(sort_field, '') > unique[key].get(sort_field, ''):
             unique[key] = r
     return list(unique.values())
 

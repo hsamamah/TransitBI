@@ -384,5 +384,131 @@ run "aws iam attach-user-policy \
     "ATTACH AdministratorAccess to hani-admin"
 ok "AdministratorAccess confirmed: hani-admin"
 
+# =============================================================
+# gtfs-rt-polling-role
+# =============================================================
+log "=== gtfs-rt-polling-role ==="
+
+LAMBDA_TRUST='{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Principal": {"Service": "lambda.amazonaws.com"},
+        "Action": "sts:AssumeRole"
+    }]
+}'
+
+RT_POLLING_ROLE="gtfs-rt-polling-role"
+
+if role_exists "${RT_POLLING_ROLE}"; then
+    run "aws iam update-assume-role-policy \
+            --role-name ${RT_POLLING_ROLE} \
+            --policy-document '${LAMBDA_TRUST}' > /dev/null" \
+        "UPDATE trust policy: ${RT_POLLING_ROLE}"
+    ok "Trust policy updated: ${RT_POLLING_ROLE}"
+else
+    run "aws iam create-role \
+            --role-name ${RT_POLLING_ROLE} \
+            --assume-role-policy-document '${LAMBDA_TRUST}' \
+            --region '${REGION}' > /dev/null" \
+        "CREATE role: ${RT_POLLING_ROLE}"
+    ok "Created role: ${RT_POLLING_ROLE}"
+fi
+
+run "aws iam put-role-policy \
+        --role-name ${RT_POLLING_ROLE} \
+        --policy-name GtfsRtPollingPolicy \
+        --policy-document '{
+            \"Version\": \"2012-10-17\",
+            \"Statement\": [
+                {
+                    \"Sid\": \"S3Write\",
+                    \"Effect\": \"Allow\",
+                    \"Action\": [\"s3:PutObject\"],
+                    \"Resource\": \"arn:aws:s3:::${S3_RAW}/gtfs-rt/*\"
+                },
+                {
+                    \"Sid\": \"CloudWatchMetrics\",
+                    \"Effect\": \"Allow\",
+                    \"Action\": [\"cloudwatch:PutMetricData\"],
+                    \"Resource\": \"*\"
+                },
+                {
+                    \"Sid\": \"CloudWatchLogs\",
+                    \"Effect\": \"Allow\",
+                    \"Action\": [\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\"],
+                    \"Resource\": \"arn:aws:logs:${REGION}:${ACCOUNT}:*\"
+                }
+            ]
+        }' > /dev/null" \
+    "UPSERT inline policy: GtfsRtPollingPolicy"
+ok "Upserted: GtfsRtPollingPolicy"
+
+run "aws iam tag-role \
+        --role-name ${RT_POLLING_ROLE} \
+        --tags Key=Project,Value=seattle-transit-dw Key=ManagedBy,Value=deploy-script > /dev/null" \
+    "TAG: ${RT_POLLING_ROLE}"
+ok "Tagged: ${RT_POLLING_ROLE}"
+
+# =============================================================
+# gtfs-pipeline-notification-role
+# =============================================================
+log "=== gtfs-pipeline-notification-role ==="
+
+PIPELINE_NOTIF_ROLE="gtfs-pipeline-notification-role"
+
+if role_exists "${PIPELINE_NOTIF_ROLE}"; then
+    run "aws iam update-assume-role-policy \
+            --role-name ${PIPELINE_NOTIF_ROLE} \
+            --policy-document '${LAMBDA_TRUST}' > /dev/null" \
+        "UPDATE trust policy: ${PIPELINE_NOTIF_ROLE}"
+    ok "Trust policy updated: ${PIPELINE_NOTIF_ROLE}"
+else
+    run "aws iam create-role \
+            --role-name ${PIPELINE_NOTIF_ROLE} \
+            --assume-role-policy-document '${LAMBDA_TRUST}' \
+            --region '${REGION}' > /dev/null" \
+        "CREATE role: ${PIPELINE_NOTIF_ROLE}"
+    ok "Created role: ${PIPELINE_NOTIF_ROLE}"
+fi
+
+run "aws iam put-role-policy \
+        --role-name ${PIPELINE_NOTIF_ROLE} \
+        --policy-name GtfsPipelineNotificationPolicy \
+        --policy-document '{
+            \"Version\": \"2012-10-17\",
+            \"Statement\": [
+                {
+                    \"Sid\": \"DynamoDBRead\",
+                    \"Effect\": \"Allow\",
+                    \"Action\": [\"dynamodb:GetItem\",\"dynamodb:Query\"],
+                    \"Resource\": \"arn:aws:dynamodb:${REGION}:${ACCOUNT}:table/${DYNAMODB_PIPELINE_TABLE}\"
+                },
+                {
+                    \"Sid\": \"SNSPublish\",
+                    \"Effect\": \"Allow\",
+                    \"Action\": [\"sns:Publish\"],
+                    \"Resource\": [
+                        \"arn:aws:sns:${REGION}:${ACCOUNT}:transit-failure-alerts\",
+                        \"arn:aws:sns:${REGION}:${ACCOUNT}:transit-daily-digest\"
+                    ]
+                },
+                {
+                    \"Sid\": \"CloudWatchLogs\",
+                    \"Effect\": \"Allow\",
+                    \"Action\": [\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\"],
+                    \"Resource\": \"arn:aws:logs:${REGION}:${ACCOUNT}:*\"
+                }
+            ]
+        }' > /dev/null" \
+    "UPSERT inline policy: GtfsPipelineNotificationPolicy"
+ok "Upserted: GtfsPipelineNotificationPolicy"
+
+run "aws iam tag-role \
+        --role-name ${PIPELINE_NOTIF_ROLE} \
+        --tags Key=Project,Value=seattle-transit-dw Key=ManagedBy,Value=deploy-script > /dev/null" \
+    "TAG: ${PIPELINE_NOTIF_ROLE}"
+ok "Tagged: ${PIPELINE_NOTIF_ROLE}"
+
 log "=== IAM deploy complete ==="
 if [[ $DRY_RUN == true ]]; then warn "DRY-RUN — no changes applied"; fi

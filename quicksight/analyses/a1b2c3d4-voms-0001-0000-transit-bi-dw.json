@@ -8,10 +8,627 @@
                 "DataSetArn": "arn:aws:quicksight:us-west-2:805699509606:dataset/f866df43-50a4-492d-92f1-14901dee795d"
             }
         ],
-        "Sheets": [],
+        "Sheets": [
+            {
+                "SheetId": "voms-sheet-01",
+                "Name": "VOMS Overview",
+                "Visuals": [
+                    {
+                        "KPIVisual": {
+                            "VisualId": "voms-kpi-monthly",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "PlainText": "Monthly VOMS"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "Values": [
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "voms-kpi-monthly-val",
+                                                "Column": {
+                                                    "DataSetIdentifier": "v_voms",
+                                                    "ColumnName": "monthly_voms"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "SUM"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "TargetValues": [],
+                                    "TrendGroups": [
+                                        {
+                                            "DateDimensionField": {
+                                                "FieldId": "voms-kpi-monthly-trend",
+                                                "Column": {
+                                                    "DataSetIdentifier": "v_voms",
+                                                    "ColumnName": "fulldate"
+                                                },
+                                                "DateGranularity": "MONTH",
+                                                "HierarchyId": "voms-kpi-monthly-trend"
+                                            }
+                                        }
+                                    ]
+                                },
+                                "SortConfiguration": {},
+                                "KPIOptions": {
+                                    "Comparison": {
+                                        "ComparisonMethod": "PERCENT_DIFFERENCE"
+                                    },
+                                    "PrimaryValueDisplayType": "ACTUAL",
+                                    "Sparkline": {
+                                        "Visibility": "VISIBLE",
+                                        "Type": "AREA",
+                                        "TooltipVisibility": "HIDDEN"
+                                    },
+                                    "VisualLayoutOptions": {
+                                        "StandardLayout": {
+                                            "Type": "VERTICAL"
+                                        }
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": [
+                                {
+                                    "DateTimeHierarchy": {
+                                        "HierarchyId": "voms-kpi-monthly-trend",
+                                        "DrillDownFilters": []
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "KPIVisual": {
+                            "VisualId": "voms-kpi-ntd",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "PlainText": "NTD Period VOMS"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "Values": [
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "voms-kpi-ntd-val",
+                                                "Column": {
+                                                    "DataSetIdentifier": "v_voms",
+                                                    "ColumnName": "ntd_period_voms"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "SUM"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "TargetValues": [],
+                                    "TrendGroups": [
+                                        {
+                                            "DateDimensionField": {
+                                                "FieldId": "voms-kpi-ntd-trend",
+                                                "Column": {
+                                                    "DataSetIdentifier": "v_voms",
+                                                    "ColumnName": "fulldate"
+                                                },
+                                                "DateGranularity": "MONTH",
+                                                "HierarchyId": "voms-kpi-ntd-trend"
+                                            }
+                                        }
+                                    ]
+                                },
+                                "SortConfiguration": {},
+                                "KPIOptions": {
+                                    "Comparison": {
+                                        "ComparisonMethod": "PERCENT_DIFFERENCE"
+                                    },
+                                    "PrimaryValueDisplayType": "ACTUAL",
+                                    "Sparkline": {
+                                        "Visibility": "VISIBLE",
+                                        "Type": "AREA",
+                                        "TooltipVisibility": "HIDDEN"
+                                    },
+                                    "VisualLayoutOptions": {
+                                        "StandardLayout": {
+                                            "Type": "VERTICAL"
+                                        }
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": [
+                                {
+                                    "DateTimeHierarchy": {
+                                        "HierarchyId": "voms-kpi-ntd-trend",
+                                        "DrillDownFilters": []
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "LineChartVisual": {
+                            "VisualId": "voms-line-trend",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "PlainText": "Monthly VOMS by Agency"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "LineChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "DateDimensionField": {
+                                                    "FieldId": "voms-line-x",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_voms",
+                                                        "ColumnName": "fulldate"
+                                                    },
+                                                    "DateGranularity": "MONTH",
+                                                    "HierarchyId": "voms-line-x"
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "voms-line-y",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_voms",
+                                                        "ColumnName": "monthly_voms"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "voms-line-color",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_voms",
+                                                        "ColumnName": "agencyname"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "voms-line-x",
+                                                "Direction": "ASC"
+                                            }
+                                        }
+                                    ]
+                                },
+                                "Type": "LINE",
+                                "XAxisDisplayOptions": {
+                                    "AxisOffset": "0px"
+                                },
+                                "Legend": {
+                                    "Visibility": "VISIBLE",
+                                    "Position": "BOTTOM"
+                                },
+                                "DataLabels": {
+                                    "Visibility": "HIDDEN",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "NONE",
+                                        "TooltipFields": []
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": [
+                                {
+                                    "DateTimeHierarchy": {
+                                        "HierarchyId": "voms-line-x",
+                                        "DrillDownFilters": []
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "BarChartVisual": {
+                            "VisualId": "voms-bar-mode",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "PlainText": "VOMS by Mode"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "BarChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "voms-bar-cat",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_voms",
+                                                        "ColumnName": "mode"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "voms-bar-val",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_voms",
+                                                        "ColumnName": "monthly_voms"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "voms-bar-color",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_voms",
+                                                        "ColumnName": "agencyname"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "voms-bar-val",
+                                                "Direction": "DESC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "ColorItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "SmallMultiplesLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "Orientation": "HORIZONTAL",
+                                "BarsArrangement": "CLUSTERED",
+                                "Legend": {
+                                    "Visibility": "VISIBLE",
+                                    "Position": "BOTTOM"
+                                },
+                                "DataLabels": {
+                                    "Visibility": "VISIBLE",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "NONE",
+                                        "TooltipFields": []
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "BarChartVisual": {
+                            "VisualId": "voms-bar-peak",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "PlainText": "VOMS by Peak Period"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "BarChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "voms-peak-cat",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_voms",
+                                                        "ColumnName": "peak_period"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "voms-peak-val",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_voms",
+                                                        "ColumnName": "monthly_voms"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": []
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "voms-peak-val",
+                                                "Direction": "DESC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "ColorItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "SmallMultiplesLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "Orientation": "VERTICAL",
+                                "BarsArrangement": "CLUSTERED",
+                                "Legend": {
+                                    "Visibility": "HIDDEN"
+                                },
+                                "DataLabels": {
+                                    "Visibility": "VISIBLE",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "NONE",
+                                        "TooltipFields": []
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "TableVisual": {
+                            "VisualId": "voms-table-detail",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "PlainText": "VOMS Detail — Agency / Mode / Month"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "TableAggregatedFieldWells": {
+                                        "GroupBy": [
+                                            {
+                                                "DateDimensionField": {
+                                                    "FieldId": "voms-tbl-date",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_voms",
+                                                        "ColumnName": "fulldate"
+                                                    },
+                                                    "DateGranularity": "MONTH"
+                                                }
+                                            },
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "voms-tbl-agency",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_voms",
+                                                        "ColumnName": "agencyname"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "voms-tbl-mode",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_voms",
+                                                        "ColumnName": "mode"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "voms-tbl-peak",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_voms",
+                                                        "ColumnName": "peak_period"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "voms-tbl-monthly",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_voms",
+                                                        "ColumnName": "monthly_voms"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "voms-tbl-ntd",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_voms",
+                                                        "ColumnName": "ntd_period_voms"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "RowSort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "voms-tbl-date",
+                                                "Direction": "DESC"
+                                            }
+                                        }
+                                    ]
+                                },
+                                "TableOptions": {
+                                    "Orientation": "VERTICAL",
+                                    "HeaderStyle": {
+                                        "TextWrap": "WRAP",
+                                        "Height": 25
+                                    },
+                                    "CellStyle": {
+                                        "Height": 25
+                                    }
+                                },
+                                "PaginatedReportOptions": {
+                                    "VerticalOverflowVisibility": "VISIBLE"
+                                }
+                            },
+                            "Actions": []
+                        }
+                    }
+                ],
+                "Layouts": [
+                    {
+                        "Configuration": {
+                            "GridLayout": {
+                                "Elements": [
+                                    {
+                                        "ElementId": "voms-kpi-monthly",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 0,
+                                        "ColumnSpan": 9,
+                                        "RowIndex": 0,
+                                        "RowSpan": 7
+                                    },
+                                    {
+                                        "ElementId": "voms-kpi-ntd",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 9,
+                                        "ColumnSpan": 9,
+                                        "RowIndex": 0,
+                                        "RowSpan": 7
+                                    },
+                                    {
+                                        "ElementId": "voms-line-trend",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 0,
+                                        "ColumnSpan": 36,
+                                        "RowIndex": 7,
+                                        "RowSpan": 14
+                                    },
+                                    {
+                                        "ElementId": "voms-bar-mode",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 0,
+                                        "ColumnSpan": 18,
+                                        "RowIndex": 21,
+                                        "RowSpan": 12
+                                    },
+                                    {
+                                        "ElementId": "voms-bar-peak",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 18,
+                                        "ColumnSpan": 18,
+                                        "RowIndex": 21,
+                                        "RowSpan": 12
+                                    },
+                                    {
+                                        "ElementId": "voms-table-detail",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 0,
+                                        "ColumnSpan": 36,
+                                        "RowIndex": 33,
+                                        "RowSpan": 15
+                                    }
+                                ],
+                                "CanvasSizeOptions": {
+                                    "ScreenCanvasSizeOptions": {
+                                        "ResizeOption": "RESPONSIVE"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "ContentType": "INTERACTIVE"
+            }
+        ],
         "CalculatedFields": [],
         "ParameterDeclarations": [],
-        "FilterGroups": []
+        "FilterGroups": [],
+        "AnalysisDefaults": {
+            "DefaultNewSheetConfiguration": {
+                "InteractiveLayoutConfiguration": {
+                    "Grid": {
+                        "CanvasSizeOptions": {
+                            "ScreenCanvasSizeOptions": {
+                                "ResizeOption": "RESPONSIVE"
+                            }
+                        }
+                    }
+                },
+                "SheetContentType": "INTERACTIVE"
+            }
+        }
     },
     "ThemeArn": null
 }

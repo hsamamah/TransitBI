@@ -30,7 +30,7 @@ DATASET_ID     = "f866df43-50a4-492d-92f1-14901dee795d"
 DATASET_ARN    = f"arn:aws:quicksight:{REGION}:{ACCOUNT}:dataset/{DATASET_ID}"
 DATASET_IDENT  = "v_voms"
 FOLDER_ID      = "240636fa-ade1-4f5a-9929-67acda51d579"
-QS_PRINCIPAL   = f"arn:aws:quicksight:{REGION}:{ACCOUNT}:user/default/hani-admin"
+QS_PRINCIPAL   = f"arn:aws:quicksight:{REGION}:{ACCOUNT}:user/default/{ACCOUNT}"
 
 qs = boto3.client("quicksight", region_name=REGION)
 
@@ -352,12 +352,34 @@ PERMISSIONS = [
 
 
 # ── Create or update ──────────────────────────────────────────────────────────
-def analysis_exists():
+def get_analysis_status():
+    """Returns the analysis status string, or None if not found."""
     try:
-        qs.describe_analysis(AwsAccountId=ACCOUNT, AnalysisId=ANALYSIS_ID)
-        return True
+        resp = qs.describe_analysis(AwsAccountId=ACCOUNT, AnalysisId=ANALYSIS_ID)
+        return resp['Analysis']['Status']
     except qs.exceptions.ResourceNotFoundException:
+        return None
+
+
+def sheets_are_empty() -> bool:
+    """True if the stored Definition has no sheets — indicates a silent drop."""
+    try:
+        resp = qs.describe_analysis_definition(
+            AwsAccountId=ACCOUNT, AnalysisId=ANALYSIS_ID)
+        return len(resp.get('Definition', {}).get('Sheets', [])) == 0
+    except Exception:
         return False
+
+
+def delete_analysis():
+    """Delete the analysis so it can be cleanly recreated."""
+    print("  Deleting existing analysis for clean recreate...")
+    qs.delete_analysis(
+        AwsAccountId=ACCOUNT,
+        AnalysisId=ANALYSIS_ID,
+        ForceDeleteWithoutRecovery=True,
+    )
+    print("  ✓ Deleted")
 
 
 def add_to_folder(analysis_id):
@@ -379,16 +401,28 @@ if __name__ == "__main__":
     print(f"Dataset     : {DATASET_IDENT} ({DATASET_ID})")
     print()
 
-    if analysis_exists():
-        print("Updating existing analysis...")
-        resp = qs.update_analysis(
-            AwsAccountId=ACCOUNT,
-            AnalysisId=ANALYSIS_ID,
-            Name=ANALYSIS_NAME,
-            Definition=DEFINITION,
-        )
-        print(f"  ✓ Updated — status: {resp.get('UpdateStatus', 'UNKNOWN')}")
-    else:
+    status = get_analysis_status()
+
+    if status is not None:
+        # update_analysis silently drops Sheets when the analysis was originally
+        # created via SourceEntity (console). Detect this by checking the stored
+        # Definition after the fact — if Sheets is empty, delete and recreate.
+        if sheets_are_empty():
+            print(f"Analysis exists (status={status}) but Sheets are empty — "
+                  f"this means update_analysis dropped the Definition.")
+            delete_analysis()
+            status = None   # fall through to create
+        else:
+            print(f"Updating existing analysis (status={status})...")
+            resp = qs.update_analysis(
+                AwsAccountId=ACCOUNT,
+                AnalysisId=ANALYSIS_ID,
+                Name=ANALYSIS_NAME,
+                Definition=DEFINITION,
+            )
+            print(f"  ✓ Updated — status: {resp.get('UpdateStatus', 'UNKNOWN')}")
+
+    if status is None:
         print("Creating new analysis...")
         resp = qs.create_analysis(
             AwsAccountId=ACCOUNT,

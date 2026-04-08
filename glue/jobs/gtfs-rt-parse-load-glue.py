@@ -34,6 +34,7 @@ import io
 import time
 import boto3
 import pytz
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone, timedelta
 from google.transit import gtfs_realtime_pb2
 
@@ -116,6 +117,23 @@ def read_pb_from_s3(s3_key):
     except Exception as e:
         print(f"WARN: Parse failed for {s3_key}: {e}")
         return None
+
+
+S3_READ_WORKERS = 32
+
+def read_pb_files_parallel(s3_keys):
+    """
+    Download and parse .pb files in parallel.
+    Returns a list of FeedMessage objects (None entries omitted).
+    """
+    feeds = []
+    with ThreadPoolExecutor(max_workers=S3_READ_WORKERS) as pool:
+        futures = {pool.submit(read_pb_from_s3, key): key for key in s3_keys}
+        for future in as_completed(futures):
+            feed = future.result()
+            if feed is not None:
+                feeds.append(feed)
+    return feeds
 
 
 def write_csv_to_staging(records, fields, agency, date_str, file_name):
@@ -355,10 +373,8 @@ def main():
         print(f"  Found {len(tu_files)} trip-update .pb files")
 
         tu_records = []
-        for f in tu_files:
-            feed = read_pb_from_s3(f)
-            if feed:
-                tu_records.extend(extract_trip_updates(feed, agency_key))
+        for feed in read_pb_files_parallel(tu_files):
+            tu_records.extend(extract_trip_updates(feed, agency_key))
 
         tu_records = deduplicate_latest(
             tu_records,
@@ -377,10 +393,8 @@ def main():
         print(f"  Found {len(vp_files)} vehicle-position .pb files")
 
         vp_records = []
-        for f in vp_files:
-            feed = read_pb_from_s3(f)
-            if feed:
-                vp_records.extend(extract_vehicle_positions(feed, agency_key))
+        for feed in read_pb_files_parallel(vp_files):
+            vp_records.extend(extract_vehicle_positions(feed, agency_key))
 
         vp_records = deduplicate_latest(
             vp_records,

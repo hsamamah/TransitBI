@@ -303,7 +303,7 @@ upsert_glue_job \
 upsert_glue_job \
     "gtfs-rt-parse-load-glue" \
     "${SCRIPTS}/gtfs-rt-parse-load-glue.py" \
-    4 20 \
+    4 40 \
     "\"--iam_role\": \"${REDSHIFT_COPY_ROLE}\", \"--additional-python-modules\": \"gtfs-realtime-bindings\"" \
     3
 

@@ -123,7 +123,7 @@ fi
 # ── QuickSight resource IDs ───────────────────────────────────
 DATASOURCE_ID="ee6148c5-7ba2-45b8-b4a5-c721e9ab7aca"
 VPC_CONNECTION_ARN="arn:aws:quicksight:${REGION}:${ACCOUNT}:vpcConnection/c9508d2a-f178-4add-a3fb-ba52ae4c742f"
-QS_PRINCIPAL="arn:aws:quicksight:${REGION}:${ACCOUNT}:user/default/hani-admin"
+QS_PRINCIPAL="arn:aws:quicksight:${REGION}:${ACCOUNT}:user/default/${ACCOUNT}"
 FOLDER_ID="240636fa-ade1-4f5a-9929-67acda51d579"
 
 # Canonical dataset order — drives all three loops (Steps 2, 3, 4)
@@ -464,6 +464,33 @@ if ! $REFRESH_ONLY; then
             ok "Folder member (analysis): ${analysis_name}"
         else
             warn "Folder membership skipped (already exists): ${analysis_name}"
+        fi
+    done
+
+    # 5b — Ensure every exported analysis JSON is in the shared folder.
+    # The deploy loop above only adds analyses it actively deploys.
+    # Analyses that existed in AWS before being exported (and therefore
+    # not created/updated by this run) would otherwise be missed.
+    log "=== [5b] Folder membership sweep — all exported analyses ==="
+    for def_file in "${ANALYSES_DIR}"/*.json; do
+        [[ "${def_file}" == *.placeholder.json ]] && continue
+        [[ ! -f "${def_file}" ]] && continue
+        if $DRY_RUN; then
+            analysis_name=$(python3 -c "import json,sys; d=json.load(open('${def_file}')); print(d['Name'])")
+            dry "ENSURE folder member (analysis): ${analysis_name}"
+            continue
+        fi
+        analysis_id=$(python3 -c "import json,sys; d=json.load(open('${def_file}')); print(d['AnalysisId'])")
+        analysis_name=$(python3 -c "import json,sys; d=json.load(open('${def_file}')); print(d['Name'])")
+        if aws quicksight create-folder-membership \
+                --aws-account-id "${ACCOUNT}" \
+                --folder-id "${FOLDER_ID}" \
+                --member-id "${analysis_id}" \
+                --member-type ANALYSIS \
+                --region "${REGION}" > /dev/null 2>&1; then
+            ok "Folder member (analysis): ${analysis_name}"
+        else
+            ok "Folder member (analysis): ${analysis_name} — already in folder"
         fi
     done
 

@@ -7,7 +7,11 @@
                 "Identifier": "v_voms",
                 "DataSetArn": "arn:aws:quicksight:us-west-2:805699509606:dataset/f866df43-50a4-492d-92f1-14901dee795d"
             }
-        ]
+        ],
+        "Sheets": [],
+        "CalculatedFields": [],
+        "ParameterDeclarations": [],
+        "FilterGroups": []
     },
     "ThemeArn": null
 }

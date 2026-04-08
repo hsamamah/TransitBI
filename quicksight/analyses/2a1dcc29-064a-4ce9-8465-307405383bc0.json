@@ -1,0 +1,838 @@
+{
+    "Name": "vw_dailyvrm & vw_dailyvrh analysis",
+    "AnalysisId": "2a1dcc29-064a-4ce9-8465-307405383bc0",
+    "Definition": {
+        "DataSetIdentifierDeclarations": [
+            {
+                "Identifier": "vw_dailyvrm",
+                "DataSetArn": "arn:aws:quicksight:us-west-2:805699509606:dataset/c0894c19-2b88-448a-883a-ce164057421e"
+            },
+            {
+                "Identifier": "vw_dailyvrh",
+                "DataSetArn": "arn:aws:quicksight:us-west-2:805699509606:dataset/2ade677c-c1c3-4f1f-ad94-a2d24fa66421"
+            }
+        ],
+        "Sheets": [
+            {
+                "SheetId": "3b73276b-835d-40ea-b9a9-5dfd19575564",
+                "Name": "Sheet 1",
+                "Visuals": [
+                    {
+                        "KPIVisual": {
+                            "VisualId": "b799acb7-86b1-4f39-9ce1-430ed7e44c84",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Total VRM (miles)</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "Values": [
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "vw_dailyv-total_vrm-c90950.0.1775546881513",
+                                                "Column": {
+                                                    "DataSetIdentifier": "vw_dailyvrm",
+                                                    "ColumnName": "total_vrm_including_estimated"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "SUM"
+                                                },
+                                                "FormatConfiguration": {
+                                                    "FormatConfiguration": {
+                                                        "NumberDisplayFormatConfiguration": {
+                                                            "SeparatorConfiguration": {
+                                                                "ThousandsSeparator": {
+                                                                    "Visibility": "VISIBLE"
+                                                                }
+                                                            },
+                                                            "DecimalPlacesConfiguration": {
+                                                                "DecimalPlaces": 0
+                                                            },
+                                                            "NullValueFormatConfiguration": {
+                                                                "NullString": "null"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "TargetValues": [],
+                                    "TrendGroups": []
+                                },
+                                "SortConfiguration": {},
+                                "KPIOptions": {
+                                    "Comparison": {
+                                        "ComparisonMethod": "PERCENT_DIFFERENCE"
+                                    },
+                                    "PrimaryValueDisplayType": "ACTUAL",
+                                    "SecondaryValueFontConfiguration": {
+                                        "FontSize": {
+                                            "Relative": "EXTRA_LARGE"
+                                        }
+                                    },
+                                    "Sparkline": {
+                                        "Visibility": "VISIBLE",
+                                        "Type": "AREA"
+                                    },
+                                    "VisualLayoutOptions": {
+                                        "StandardLayout": {
+                                            "Type": "VERTICAL"
+                                        }
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "LineChartVisual": {
+                            "VisualId": "774f5ecf-3e0c-490d-b741-63a6b3fa2aca",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Daily Vehicle Revenue Miles (VRM) by Agency</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "LineChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "DateDimensionField": {
+                                                    "FieldId": "vw_dailyv-fulldate-63f0b5.2.1775547733769",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dailyvrm",
+                                                        "ColumnName": "fulldate"
+                                                    },
+                                                    "HierarchyId": "vw_dailyv-fulldate-63f0b5.2.1775547733769"
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "vw_dailyv-total_vrm-c90950.1.1775546982349",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dailyvrm",
+                                                        "ColumnName": "total_vrm_including_estimated"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "vw_dailyv-agencynam-be6caa.2.1775546985088",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dailyvrm",
+                                                        "ColumnName": "agencyname"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "vw_dailyv-fulldate-63f0b5.2.1775547733769",
+                                                "Direction": "DESC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "ColorItemsLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "SmallMultiplesLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "Type": "LINE",
+                                "DataLabels": {
+                                    "Visibility": "HIDDEN",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "PRIMARY_VALUE",
+                                        "TooltipFields": [
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_dailyv-total_vrm-c90950.1.1775546982349",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_dailyv-agencynam-be6caa.2.1775546985088",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_dailyv-fulldate-63f0b5.2.1775547733769",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": [
+                                {
+                                    "DateTimeHierarchy": {
+                                        "HierarchyId": "vw_dailyv-fulldate-63f0b5.2.1775547733769"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "BarChartVisual": {
+                            "VisualId": "de0aae04-1bc0-4e8d-bffa-f94b38ba82ba",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Daily VRM — Reported vs Estimated</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "BarChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "DateDimensionField": {
+                                                    "FieldId": "vw_dailyv-fulldate-63f0b5.0.1775547807374",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dailyvrm",
+                                                        "ColumnName": "fulldate"
+                                                    },
+                                                    "HierarchyId": "vw_dailyv-fulldate-63f0b5.0.1775547807374"
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "vw_dailyv-reportedv-1cd58e.1.1775547814690",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dailyvrm",
+                                                        "ColumnName": "reportedvrm"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "vw_dailyv-estimated-6e0631.2.1775547855456",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dailyvrm",
+                                                        "ColumnName": "estimatedvrm"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": []
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "vw_dailyv-fulldate-63f0b5.0.1775547807374",
+                                                "Direction": "ASC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "ColorItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "SmallMultiplesLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "Orientation": "VERTICAL",
+                                "BarsArrangement": "STACKED",
+                                "DataLabels": {
+                                    "Visibility": "HIDDEN",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "PRIMARY_VALUE",
+                                        "TooltipFields": [
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_dailyv-fulldate-63f0b5.0.1775547807374",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_dailyv-reportedv-1cd58e.1.1775547814690",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_dailyv-estimated-6e0631.2.1775547855456",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": [
+                                {
+                                    "DateTimeHierarchy": {
+                                        "HierarchyId": "vw_dailyv-fulldate-63f0b5.0.1775547807374"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "KPIVisual": {
+                            "VisualId": "28b10a1b-9455-41d3-b7ea-eb0f02f9aa34",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Total Vehicle Revenue Hours (VRH)</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "Values": [
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "vw_dailyv-total_vrh-2f5d94.0.1775548103741",
+                                                "Column": {
+                                                    "DataSetIdentifier": "vw_dailyvrh",
+                                                    "ColumnName": "total_vrh_including_estimated"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "SUM"
+                                                },
+                                                "FormatConfiguration": {
+                                                    "FormatConfiguration": {
+                                                        "NumberDisplayFormatConfiguration": {
+                                                            "SeparatorConfiguration": {
+                                                                "ThousandsSeparator": {
+                                                                    "Visibility": "VISIBLE"
+                                                                }
+                                                            },
+                                                            "DecimalPlacesConfiguration": {
+                                                                "DecimalPlaces": 0
+                                                            },
+                                                            "NullValueFormatConfiguration": {
+                                                                "NullString": "null"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "TargetValues": [],
+                                    "TrendGroups": []
+                                },
+                                "SortConfiguration": {},
+                                "KPIOptions": {
+                                    "Comparison": {
+                                        "ComparisonMethod": "PERCENT_DIFFERENCE"
+                                    },
+                                    "PrimaryValueDisplayType": "ACTUAL",
+                                    "SecondaryValueFontConfiguration": {
+                                        "FontSize": {
+                                            "Relative": "EXTRA_LARGE"
+                                        }
+                                    },
+                                    "Sparkline": {
+                                        "Visibility": "VISIBLE",
+                                        "Type": "AREA"
+                                    },
+                                    "VisualLayoutOptions": {
+                                        "StandardLayout": {
+                                            "Type": "VERTICAL"
+                                        }
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "LineChartVisual": {
+                            "VisualId": "fca25e19-eae4-42ed-9e35-34b0d6dd02dc",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Daily Vehicle Revenue Hours (VRH) by Agency</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "LineChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "DateDimensionField": {
+                                                    "FieldId": "vw_dailyv-fulldate-22c785.0.1775548486630",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dailyvrh",
+                                                        "ColumnName": "fulldate"
+                                                    },
+                                                    "HierarchyId": "vw_dailyv-fulldate-22c785.0.1775548486630"
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "vw_dailyv-total_vrh-2f5d94.1.1775548496265",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dailyvrh",
+                                                        "ColumnName": "total_vrh_including_estimated"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "vw_dailyv-agencynam-c3cddf.2.1775548501769",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dailyvrh",
+                                                        "ColumnName": "agencyname"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "vw_dailyv-fulldate-22c785.0.1775548486630",
+                                                "Direction": "DESC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "ColorItemsLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "SmallMultiplesLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "Type": "LINE",
+                                "DataLabels": {
+                                    "Visibility": "HIDDEN",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "PRIMARY_VALUE",
+                                        "TooltipFields": [
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_dailyv-fulldate-22c785.0.1775548486630",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_dailyv-total_vrh-2f5d94.1.1775548496265",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_dailyv-agencynam-c3cddf.2.1775548501769",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": [
+                                {
+                                    "DateTimeHierarchy": {
+                                        "HierarchyId": "vw_dailyv-fulldate-22c785.0.1775548486630"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "BarChartVisual": {
+                            "VisualId": "bae3eaaa-8000-4ced-9533-cda561f7aa01",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Daily VRH — Reported vs Estimated</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "BarChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "DateDimensionField": {
+                                                    "FieldId": "vw_dailyv-fulldate-22c785.0.1775548665329",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dailyvrh",
+                                                        "ColumnName": "fulldate"
+                                                    },
+                                                    "HierarchyId": "vw_dailyv-fulldate-22c785.0.1775548665329"
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "vw_dailyv-reportedv-ab1835.1.1775548670400",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dailyvrh",
+                                                        "ColumnName": "reportedvrh"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "vw_dailyv-estimated-ce9063.2.1775548685541",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dailyvrh",
+                                                        "ColumnName": "estimatedvrh"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": []
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "vw_dailyv-fulldate-22c785.0.1775548665329",
+                                                "Direction": "ASC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "ColorItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "SmallMultiplesLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "Orientation": "VERTICAL",
+                                "BarsArrangement": "STACKED",
+                                "DataLabels": {
+                                    "Visibility": "HIDDEN",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "PRIMARY_VALUE",
+                                        "TooltipFields": [
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_dailyv-fulldate-22c785.0.1775548665329",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_dailyv-reportedv-ab1835.1.1775548670400",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_dailyv-estimated-ce9063.2.1775548685541",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": [
+                                {
+                                    "DateTimeHierarchy": {
+                                        "HierarchyId": "vw_dailyv-fulldate-22c785.0.1775548665329"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "Layouts": [
+                    {
+                        "Configuration": {
+                            "GridLayout": {
+                                "Elements": [
+                                    {
+                                        "ElementId": "b799acb7-86b1-4f39-9ce1-430ed7e44c84",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 0,
+                                        "ColumnSpan": 14,
+                                        "RowIndex": 0,
+                                        "RowSpan": 7
+                                    },
+                                    {
+                                        "ElementId": "774f5ecf-3e0c-490d-b741-63a6b3fa2aca",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 15,
+                                        "ColumnSpan": 15,
+                                        "RowIndex": 0,
+                                        "RowSpan": 7
+                                    },
+                                    {
+                                        "ElementId": "de0aae04-1bc0-4e8d-bffa-f94b38ba82ba",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 0,
+                                        "ColumnSpan": 14,
+                                        "RowIndex": 7,
+                                        "RowSpan": 7
+                                    },
+                                    {
+                                        "ElementId": "28b10a1b-9455-41d3-b7ea-eb0f02f9aa34",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 15,
+                                        "ColumnSpan": 15,
+                                        "RowIndex": 7,
+                                        "RowSpan": 7
+                                    },
+                                    {
+                                        "ElementId": "fca25e19-eae4-42ed-9e35-34b0d6dd02dc",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 0,
+                                        "ColumnSpan": 14,
+                                        "RowIndex": 14,
+                                        "RowSpan": 7
+                                    },
+                                    {
+                                        "ElementId": "bae3eaaa-8000-4ced-9533-cda561f7aa01",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 15,
+                                        "ColumnSpan": 15,
+                                        "RowIndex": 14,
+                                        "RowSpan": 7
+                                    }
+                                ],
+                                "CanvasSizeOptions": {
+                                    "ScreenCanvasSizeOptions": {
+                                        "ResizeOption": "FIXED",
+                                        "OptimizedViewPortWidth": "1600px"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "ContentType": "INTERACTIVE"
+            },
+            {
+                "SheetId": "fa37482c-ff24-4c1c-b264-4ea8a16c4ea5",
+                "Name": "Sheet 2",
+                "Visuals": [
+                    {
+                        "EmptyVisual": {
+                            "VisualId": "c97b0cac-d7c8-4829-bc7e-a21b3c14783e",
+                            "DataSetIdentifier": "vw_dailyvrm",
+                            "Actions": []
+                        }
+                    }
+                ],
+                "Layouts": [
+                    {
+                        "Configuration": {
+                            "GridLayout": {
+                                "Elements": [
+                                    {
+                                        "ElementId": "c97b0cac-d7c8-4829-bc7e-a21b3c14783e",
+                                        "ElementType": "VISUAL",
+                                        "ColumnSpan": 18,
+                                        "RowSpan": 12
+                                    }
+                                ],
+                                "CanvasSizeOptions": {
+                                    "ScreenCanvasSizeOptions": {
+                                        "ResizeOption": "FIXED",
+                                        "OptimizedViewPortWidth": "1600px"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "ContentType": "INTERACTIVE"
+            }
+        ],
+        "CalculatedFields": [],
+        "ParameterDeclarations": [],
+        "FilterGroups": [
+            {
+                "FilterGroupId": "95ff695f-8b45-44f8-be2c-9d2a33d8a2c2",
+                "Filters": [
+                    {
+                        "CategoryFilter": {
+                            "FilterId": "3a2ac6c8-b353-487e-9337-d5bbffbe220d",
+                            "Column": {
+                                "DataSetIdentifier": "vw_dailyvrm",
+                                "ColumnName": "agencyname"
+                            },
+                            "Configuration": {
+                                "FilterListConfiguration": {
+                                    "MatchOperator": "CONTAINS",
+                                    "CategoryValues": [
+                                        "Metro Transit",
+                                        "Sound Transit"
+                                    ],
+                                    "NullOption": "NON_NULLS_ONLY"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "ScopeConfiguration": {
+                    "AllSheets": {}
+                },
+                "Status": "ENABLED",
+                "CrossDataset": "ALL_DATASETS"
+            },
+            {
+                "FilterGroupId": "17f94c78-1863-4725-914c-69bc8735addf",
+                "Filters": [
+                    {
+                        "TimeRangeFilter": {
+                            "FilterId": "c63c57ba-a55e-454e-a9fb-83351c7ed433",
+                            "Column": {
+                                "DataSetIdentifier": "vw_dailyvrh",
+                                "ColumnName": "fulldate"
+                            },
+                            "IncludeMinimum": true,
+                            "IncludeMaximum": false,
+                            "RangeMinimumValue": {
+                                "StaticValue": "2026-02-28T16:00:00-08:00"
+                            },
+                            "RangeMaximumValue": {
+                                "StaticValue": "2026-04-06T17:00:00-07:00"
+                            },
+                            "NullOption": "NON_NULLS_ONLY",
+                            "TimeGranularity": "DAY"
+                        }
+                    }
+                ],
+                "ScopeConfiguration": {
+                    "AllSheets": {}
+                },
+                "Status": "ENABLED",
+                "CrossDataset": "ALL_DATASETS"
+            }
+        ],
+        "AnalysisDefaults": {
+            "DefaultNewSheetConfiguration": {
+                "InteractiveLayoutConfiguration": {
+                    "Grid": {
+                        "CanvasSizeOptions": {
+                            "ScreenCanvasSizeOptions": {
+                                "ResizeOption": "FIXED",
+                                "OptimizedViewPortWidth": "1600px"
+                            }
+                        }
+                    }
+                },
+                "SheetContentType": "INTERACTIVE"
+            }
+        },
+        "Options": {
+            "WeekStart": "SUNDAY",
+            "QBusinessInsightsStatus": "DISABLED",
+            "ExcludedDataSetArns": [],
+            "CustomActionDefaults": {
+                "highlightOperation": {
+                    "Trigger": "DATA_POINT_CLICK"
+                }
+            }
+        },
+        "QueryExecutionOptions": {
+            "QueryExecutionMode": "AUTO"
+        }
+    },
+    "ThemeArn": "arn:aws:quicksight::aws:theme/NITRO"
+}

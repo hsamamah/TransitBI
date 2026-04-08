@@ -1,0 +1,68 @@
+{
+    "Name": "New custom SQL analysis",
+    "AnalysisId": "83b2ba19-8c51-4e2e-b95c-7114b4efbf3c",
+    "Definition": {
+        "DataSetIdentifierDeclarations": [
+            {
+                "Identifier": "New custom SQL",
+                "DataSetArn": "arn:aws:quicksight:us-west-2:805699509606:dataset/773d5b88-be73-4b42-8dcc-75e53b2ad2ef"
+            }
+        ],
+        "Sheets": [
+            {
+                "SheetId": "839470c5-1610-4727-af6d-e1c59258a356",
+                "Name": "Sheet 1",
+                "Visuals": [
+                    {
+                        "EmptyVisual": {
+                            "VisualId": "f13f617e-c245-4591-a728-f7df34cbb351",
+                            "DataSetIdentifier": "New custom SQL",
+                            "Actions": []
+                        }
+                    }
+                ],
+                "Layouts": [
+                    {
+                        "Configuration": {
+                            "GridLayout": {
+                                "Elements": [
+                                    {
+                                        "ElementId": "f13f617e-c245-4591-a728-f7df34cbb351",
+                                        "ElementType": "VISUAL",
+                                        "ColumnSpan": 18,
+                                        "RowSpan": 12
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "ContentType": "INTERACTIVE"
+            }
+        ],
+        "CalculatedFields": [],
+        "ParameterDeclarations": [],
+        "FilterGroups": [],
+        "AnalysisDefaults": {
+            "DefaultNewSheetConfiguration": {
+                "InteractiveLayoutConfiguration": {
+                    "Grid": {
+                        "CanvasSizeOptions": {
+                            "ScreenCanvasSizeOptions": {
+                                "ResizeOption": "FIXED",
+                                "OptimizedViewPortWidth": "1600px"
+                            }
+                        }
+                    }
+                },
+                "SheetContentType": "INTERACTIVE"
+            }
+        },
+        "Options": {
+            "WeekStart": "SUNDAY",
+            "QBusinessInsightsStatus": "DISABLED",
+            "ExcludedDataSetArns": []
+        }
+    },
+    "ThemeArn": "arn:aws:quicksight::aws:theme/NITRO"
+}

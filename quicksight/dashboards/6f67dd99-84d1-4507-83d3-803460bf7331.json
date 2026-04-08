@@ -1,0 +1,420 @@
+{
+    "Name": "Seattle Transit OTP Analysis - Period Trend P1",
+    "DashboardId": "6f67dd99-84d1-4507-83d3-803460bf7331",
+    "Definition": {
+        "DataSetIdentifierDeclarations": [
+            {
+                "Identifier": "daily_otp_summary",
+                "DataSetArn": "arn:aws:quicksight:us-west-2:805699509606:dataset/a6cf2399-4f8c-45ab-9dfd-1a2eab6fd7e1"
+            }
+        ],
+        "Sheets": [
+            {
+                "SheetId": "6f67dd99-84d1-4507-83d3-803460bf7331_2276f959-33a3-4405-a5fd-5c5f85e79581",
+                "Name": "Sheet 1",
+                "Visuals": [
+                    {
+                        "LineChartVisual": {
+                            "VisualId": "6f67dd99-84d1-4507-83d3-803460bf7331_640a00c3-a8c9-4c92-b759-54514f5d50cd",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>\n  <inline font-size=\"24px\">\n    <b>Daily OTP Trend</b>\n  </inline>\n  <inline font-size=\"24px\">\n    <b/>\n  </inline>\n</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "LineChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "DateDimensionField": {
+                                                    "FieldId": "new_custo-fulldate-389063.0.1775532672967",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "daily_otp_summary",
+                                                        "ColumnName": "fulldate"
+                                                    },
+                                                    "HierarchyId": "new_custo-fulldate-389063.0.1775532672967"
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "new_custo-otp_pct-a4aa53.1.1775532677275",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "daily_otp_summary",
+                                                        "ColumnName": "otp_pct"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": []
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "new_custo-fulldate-389063.0.1775532672967",
+                                                "Direction": "DESC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "ColorItemsLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "SmallMultiplesLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "Type": "LINE",
+                                "XAxisDisplayOptions": {
+                                    "AxisLineVisibility": "HIDDEN",
+                                    "DataOptions": {
+                                        "DateAxisOptions": {
+                                            "MissingDateVisibility": "HIDDEN"
+                                        }
+                                    },
+                                    "ScrollbarOptions": {
+                                        "Visibility": "HIDDEN"
+                                    }
+                                },
+                                "PrimaryYAxisDisplayOptions": {
+                                    "AxisOptions": {
+                                        "DataOptions": {
+                                            "NumericAxisOptions": {
+                                                "Range": {
+                                                    "DataDriven": {}
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "DataLabels": {
+                                    "Visibility": "HIDDEN",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "PRIMARY_VALUE",
+                                        "TooltipFields": [
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "new_custo-fulldate-389063.0.1775532672967",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "new_custo-otp_pct-a4aa53.1.1775532677275",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": [
+                                {
+                                    "DateTimeHierarchy": {
+                                        "HierarchyId": "new_custo-fulldate-389063.0.1775532672967"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "BarChartVisual": {
+                            "VisualId": "6f67dd99-84d1-4507-83d3-803460bf7331_47c5ef78-decd-4740-891b-3d6f05eddebe",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>\n  <inline font-size=\"24px\">\n    <b>Daily Observation Volume</b>\n  </inline>\n</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "BarChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "DateDimensionField": {
+                                                    "FieldId": "new_custo-fulldate-389063.0.1775532752859",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "daily_otp_summary",
+                                                        "ColumnName": "fulldate"
+                                                    },
+                                                    "HierarchyId": "new_custo-fulldate-389063.0.1775532752859"
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "new_custo-total_obs-a1fe30.1.1775532756345",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "daily_otp_summary",
+                                                        "ColumnName": "total_obs"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": []
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "new_custo-fulldate-389063.0.1775532752859",
+                                                "Direction": "ASC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "ColorItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "SmallMultiplesLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "Orientation": "VERTICAL",
+                                "BarsArrangement": "CLUSTERED",
+                                "CategoryAxis": {
+                                    "AxisLineVisibility": "VISIBLE",
+                                    "ScrollbarOptions": {
+                                        "Visibility": "HIDDEN"
+                                    }
+                                },
+                                "DataLabels": {
+                                    "Visibility": "HIDDEN",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "PRIMARY_VALUE",
+                                        "TooltipFields": [
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "new_custo-fulldate-389063.0.1775532752859",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "new_custo-total_obs-a1fe30.1.1775532756345",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": [
+                                {
+                                    "DateTimeHierarchy": {
+                                        "HierarchyId": "new_custo-fulldate-389063.0.1775532752859"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "BarChartVisual": {
+                            "VisualId": "6f67dd99-84d1-4507-83d3-803460bf7331_a490d4d1-aa9f-4160-9e8b-b033936649b9",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>\n  <inline font-size=\"24px\">\n    <b>Weekday vs Weekend</b>\n  </inline>\n</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "BarChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "new_custo-dayofweek-bacc76.0.1775532877875",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "daily_otp_summary",
+                                                        "ColumnName": "dayofweek"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "new_custo-total_obs-a1fe30.1.1775532889028",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "daily_otp_summary",
+                                                        "ColumnName": "total_obs"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": [
+                                            {
+                                                "NumericalDimensionField": {
+                                                    "FieldId": "new_custo-isweekend-3d5ce5.2.1775532894245",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "daily_otp_summary",
+                                                        "ColumnName": "isweekend"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "new_custo-dayofweek-bacc76.0.1775532877875",
+                                                "Direction": "ASC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "ColorItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "SmallMultiplesLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "Orientation": "VERTICAL",
+                                "BarsArrangement": "CLUSTERED",
+                                "DataLabels": {
+                                    "Visibility": "HIDDEN",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "PRIMARY_VALUE",
+                                        "TooltipFields": [
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "new_custo-dayofweek-bacc76.0.1775532877875",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "new_custo-total_obs-a1fe30.1.1775532889028",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "new_custo-isweekend-3d5ce5.2.1775532894245",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    }
+                ],
+                "Layouts": [
+                    {
+                        "Configuration": {
+                            "GridLayout": {
+                                "Elements": [
+                                    {
+                                        "ElementId": "6f67dd99-84d1-4507-83d3-803460bf7331_640a00c3-a8c9-4c92-b759-54514f5d50cd",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 9,
+                                        "ColumnSpan": 17,
+                                        "RowIndex": 0,
+                                        "RowSpan": 11
+                                    },
+                                    {
+                                        "ElementId": "6f67dd99-84d1-4507-83d3-803460bf7331_a490d4d1-aa9f-4160-9e8b-b033936649b9",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 0,
+                                        "ColumnSpan": 17,
+                                        "RowIndex": 11,
+                                        "RowSpan": 12
+                                    },
+                                    {
+                                        "ElementId": "6f67dd99-84d1-4507-83d3-803460bf7331_47c5ef78-decd-4740-891b-3d6f05eddebe",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 17,
+                                        "ColumnSpan": 18,
+                                        "RowIndex": 11,
+                                        "RowSpan": 12
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "ContentType": "INTERACTIVE"
+            }
+        ],
+        "CalculatedFields": [],
+        "ParameterDeclarations": [],
+        "FilterGroups": [],
+        "AnalysisDefaults": {
+            "DefaultNewSheetConfiguration": {
+                "InteractiveLayoutConfiguration": {
+                    "Grid": {
+                        "CanvasSizeOptions": {
+                            "ScreenCanvasSizeOptions": {
+                                "ResizeOption": "FIXED",
+                                "OptimizedViewPortWidth": "1600px"
+                            }
+                        }
+                    }
+                },
+                "SheetContentType": "INTERACTIVE"
+            }
+        },
+        "Options": {
+            "WeekStart": "SUNDAY",
+            "QBusinessInsightsStatus": "DISABLED",
+            "ExcludedDataSetArns": []
+        }
+    }
+}

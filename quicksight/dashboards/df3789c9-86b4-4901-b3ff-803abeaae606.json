@@ -1,0 +1,415 @@
+{
+    "Name": "vw_dataqualityalert analysis",
+    "DashboardId": "df3789c9-86b4-4901-b3ff-803abeaae606",
+    "Definition": {
+        "DataSetIdentifierDeclarations": [
+            {
+                "Identifier": "vw_dataqualityalert",
+                "DataSetArn": "arn:aws:quicksight:us-west-2:805699509606:dataset/08515883-444b-48dc-b4d5-92588f3d7be5"
+            }
+        ],
+        "Sheets": [
+            {
+                "SheetId": "df3789c9-86b4-4901-b3ff-803abeaae606_0e2a7f7d-dc90-4d14-bace-2eb4132f1ca6",
+                "Name": "Sheet 1",
+                "Visuals": [
+                    {
+                        "KPIVisual": {
+                            "VisualId": "df3789c9-86b4-4901-b3ff-803abeaae606_fb3d4dc5-09d4-495c-98cc-77534a7613dc",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>RT Coverage Rate</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "Values": [
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "0a04e041-7da8-48cb-86d9-80f3e808c581.0.1775549481947",
+                                                "Column": {
+                                                    "DataSetIdentifier": "vw_dataqualityalert",
+                                                    "ColumnName": "rt_coverage_rate"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "TargetValues": [],
+                                    "TrendGroups": []
+                                },
+                                "SortConfiguration": {},
+                                "KPIOptions": {
+                                    "Comparison": {
+                                        "ComparisonMethod": "PERCENT_DIFFERENCE"
+                                    },
+                                    "PrimaryValueDisplayType": "ACTUAL",
+                                    "SecondaryValueFontConfiguration": {
+                                        "FontSize": {
+                                            "Relative": "EXTRA_LARGE"
+                                        }
+                                    },
+                                    "Sparkline": {
+                                        "Visibility": "VISIBLE",
+                                        "Type": "AREA"
+                                    },
+                                    "VisualLayoutOptions": {
+                                        "StandardLayout": {
+                                            "Type": "VERTICAL"
+                                        }
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "TableVisual": {
+                            "VisualId": "df3789c9-86b4-4901-b3ff-803abeaae606_c4d53fa3-964a-4ac2-8a6f-e3889b948293",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Data Quality Alert Status by Agency</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "TableAggregatedFieldWells": {
+                                        "GroupBy": [
+                                            {
+                                                "DateDimensionField": {
+                                                    "FieldId": "vw_dataqu-fulldate-f2e4d8.0.1775549746833",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dataqualityalert",
+                                                        "ColumnName": "fulldate"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "vw_dataqu-agencynam-6d7ae5.1.1775549752019",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dataqualityalert",
+                                                        "ColumnName": "agencyname"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "NumericalDimensionField": {
+                                                    "FieldId": "vw_dataqu-dataquali-4e75a0.2.1775549757373",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dataqualityalert",
+                                                        "ColumnName": "dataqualityalertflag"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "NumericalDimensionField": {
+                                                    "FieldId": "vw_dataqu-feedgapfl-6aaa1b.3.1775549764519",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dataqualityalert",
+                                                        "ColumnName": "feedgapflag"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "vw_dataqu-scheduled-0cf7fc.4.1775549781961",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dataqualityalert",
+                                                        "ColumnName": "scheduledtrips"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "vw_dataqu-operatedt-985f88.5.1775549785503",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dataqualityalert",
+                                                        "ColumnName": "operatedtrips"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                "SortConfiguration": {}
+                            },
+                            "Actions": []
+                        }
+                    },
+                    {
+                        "ComboChartVisual": {
+                            "VisualId": "df3789c9-86b4-4901-b3ff-803abeaae606_12d29bd4-7fd5-437f-8b9f-68c16d54e519",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Operated vs Scheduled Trips by Agency</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "ComboChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "DateDimensionField": {
+                                                    "FieldId": "vw_dataqu-fulldate-f2e4d8.0.1775549901338",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dataqualityalert",
+                                                        "ColumnName": "fulldate"
+                                                    },
+                                                    "HierarchyId": "vw_dataqu-fulldate-f2e4d8.0.1775549901338"
+                                                }
+                                            }
+                                        ],
+                                        "BarValues": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "vw_dataqu-operatedt-985f88.1.1775549907784",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dataqualityalert",
+                                                        "ColumnName": "operatedtrips"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "vw_dataqu-scheduled-0cf7fc.2.1775549910268",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "vw_dataqualityalert",
+                                                        "ColumnName": "scheduledtrips"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": [],
+                                        "LineValues": []
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "vw_dataqu-fulldate-f2e4d8.0.1775549901338",
+                                                "Direction": "ASC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "ColorItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "BarsArrangement": "CLUSTERED",
+                                "BarDataLabels": {
+                                    "Visibility": "HIDDEN",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "PRIMARY_VALUE",
+                                        "TooltipFields": [
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_dataqu-fulldate-f2e4d8.0.1775549901338",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_dataqu-operatedt-985f88.1.1775549907784",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "vw_dataqu-scheduled-0cf7fc.2.1775549910268",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": [
+                                {
+                                    "DateTimeHierarchy": {
+                                        "HierarchyId": "vw_dataqu-fulldate-f2e4d8.0.1775549901338"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "Layouts": [
+                    {
+                        "Configuration": {
+                            "GridLayout": {
+                                "Elements": [
+                                    {
+                                        "ElementId": "df3789c9-86b4-4901-b3ff-803abeaae606_fb3d4dc5-09d4-495c-98cc-77534a7613dc",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 0,
+                                        "ColumnSpan": 15,
+                                        "RowIndex": 0,
+                                        "RowSpan": 9
+                                    },
+                                    {
+                                        "ElementId": "df3789c9-86b4-4901-b3ff-803abeaae606_c4d53fa3-964a-4ac2-8a6f-e3889b948293",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 15,
+                                        "ColumnSpan": 16,
+                                        "RowIndex": 0,
+                                        "RowSpan": 9
+                                    },
+                                    {
+                                        "ElementId": "df3789c9-86b4-4901-b3ff-803abeaae606_12d29bd4-7fd5-437f-8b9f-68c16d54e519",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 0,
+                                        "ColumnSpan": 15,
+                                        "RowIndex": 9,
+                                        "RowSpan": 9
+                                    }
+                                ],
+                                "CanvasSizeOptions": {
+                                    "ScreenCanvasSizeOptions": {
+                                        "ResizeOption": "FIXED",
+                                        "OptimizedViewPortWidth": "1600px"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "ContentType": "INTERACTIVE"
+            }
+        ],
+        "CalculatedFields": [
+            {
+                "DataSetIdentifier": "vw_dataqualityalert",
+                "Name": "rt_coverage_rate",
+                "Expression": "sum(operatedtrips) / sum(scheduledtrips)"
+            }
+        ],
+        "ParameterDeclarations": [],
+        "FilterGroups": [
+            {
+                "FilterGroupId": "44ea9b9c-9a20-47b8-bf74-1062e4f71898",
+                "Filters": [
+                    {
+                        "CategoryFilter": {
+                            "FilterId": "67e7ff6a-7faa-4cea-9832-6b9ecb59c1c1",
+                            "Column": {
+                                "DataSetIdentifier": "vw_dataqualityalert",
+                                "ColumnName": "agencyname"
+                            },
+                            "Configuration": {
+                                "FilterListConfiguration": {
+                                    "MatchOperator": "CONTAINS",
+                                    "CategoryValues": [
+                                        "Metro Transit",
+                                        "Sound Transit"
+                                    ],
+                                    "NullOption": "NON_NULLS_ONLY"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "ScopeConfiguration": {
+                    "AllSheets": {}
+                },
+                "Status": "ENABLED",
+                "CrossDataset": "ALL_DATASETS"
+            }
+        ],
+        "ColumnConfigurations": [
+            {
+                "Column": {
+                    "DataSetIdentifier": "vw_dataqualityalert",
+                    "ColumnName": "rt_coverage_rate"
+                },
+                "FormatConfiguration": {
+                    "NumberFormatConfiguration": {
+                        "FormatConfiguration": {
+                            "PercentageDisplayFormatConfiguration": {
+                                "Suffix": "%",
+                                "SeparatorConfiguration": {
+                                    "DecimalSeparator": "DOT",
+                                    "ThousandsSeparator": {
+                                        "Symbol": "COMMA",
+                                        "Visibility": "VISIBLE"
+                                    }
+                                },
+                                "DecimalPlacesConfiguration": {
+                                    "DecimalPlaces": 1
+                                },
+                                "NegativeValueConfiguration": {
+                                    "DisplayMode": "NEGATIVE"
+                                },
+                                "NullValueFormatConfiguration": {
+                                    "NullString": "null"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "AnalysisDefaults": {
+            "DefaultNewSheetConfiguration": {
+                "InteractiveLayoutConfiguration": {
+                    "Grid": {
+                        "CanvasSizeOptions": {
+                            "ScreenCanvasSizeOptions": {
+                                "ResizeOption": "FIXED",
+                                "OptimizedViewPortWidth": "1600px"
+                            }
+                        }
+                    }
+                },
+                "SheetContentType": "INTERACTIVE"
+            }
+        },
+        "Options": {
+            "WeekStart": "SUNDAY",
+            "QBusinessInsightsStatus": "DISABLED",
+            "ExcludedDataSetArns": [],
+            "CustomActionDefaults": {
+                "highlightOperation": {
+                    "Trigger": "DATA_POINT_CLICK"
+                }
+            }
+        }
+    }
+}

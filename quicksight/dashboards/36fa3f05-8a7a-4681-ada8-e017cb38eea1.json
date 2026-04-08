@@ -1,0 +1,214 @@
+{
+    "Name": "Seattle Transit OTP Analysis - Period Trend P2",
+    "DashboardId": "36fa3f05-8a7a-4681-ada8-e017cb38eea1",
+    "Definition": {
+        "DataSetIdentifierDeclarations": [
+            {
+                "Identifier": "route_otp_summary",
+                "DataSetArn": "arn:aws:quicksight:us-west-2:805699509606:dataset/cd53300c-c8f9-4bf3-a964-c9e650f8d523"
+            }
+        ],
+        "Sheets": [
+            {
+                "SheetId": "36fa3f05-8a7a-4681-ada8-e017cb38eea1_dc737235-fe94-46b3-b369-93df6423a2d3",
+                "Name": "Sheet 1",
+                "Visuals": [
+                    {
+                        "BarChartVisual": {
+                            "VisualId": "36fa3f05-8a7a-4681-ada8-e017cb38eea1_230e9473-ed20-4fb5-839d-1fcc1620179d",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>\n  <inline font-size=\"24px\">\n    <b>Top 10 Routes by OTP</b>\n  </inline>\n</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "BarChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "new_custo-routeshor-4243e3.0.1775533416839",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "route_otp_summary",
+                                                        "ColumnName": "routeshortname"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "new_custo-otp_pct-4a7958.1.1775533424263",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "route_otp_summary",
+                                                        "ColumnName": "otp_pct"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": []
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "new_custo-otp_pct-4a7958.1.1775533424263",
+                                                "Direction": "DESC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "ColorItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "SmallMultiplesLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "Orientation": "HORIZONTAL",
+                                "BarsArrangement": "CLUSTERED",
+                                "CategoryAxis": {
+                                    "ScrollbarOptions": {
+                                        "Visibility": "HIDDEN",
+                                        "VisibleRange": {
+                                            "PercentRange": {
+                                                "From": 89.99999999999999,
+                                                "To": 100.0
+                                            }
+                                        }
+                                    }
+                                },
+                                "CategoryLabelOptions": {
+                                    "SortIconVisibility": "VISIBLE"
+                                },
+                                "DataLabels": {
+                                    "Visibility": "HIDDEN",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "PRIMARY_VALUE",
+                                        "TooltipFields": [
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "new_custo-routeshor-4243e3.0.1775533416839",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "new_custo-otp_pct-4a7958.1.1775533424263",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    }
+                ],
+                "Layouts": [
+                    {
+                        "Configuration": {
+                            "GridLayout": {
+                                "Elements": [
+                                    {
+                                        "ElementId": "36fa3f05-8a7a-4681-ada8-e017cb38eea1_230e9473-ed20-4fb5-839d-1fcc1620179d",
+                                        "ElementType": "VISUAL",
+                                        "ColumnSpan": 18,
+                                        "RowSpan": 12
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "ContentType": "INTERACTIVE"
+            }
+        ],
+        "CalculatedFields": [],
+        "ParameterDeclarations": [],
+        "FilterGroups": [
+            {
+                "FilterGroupId": "81f603b5-d6ed-4b26-a56e-03915da6bce4",
+                "Filters": [
+                    {
+                        "TopBottomFilter": {
+                            "FilterId": "e1805916-5585-4031-9cfd-f26b8346fcd0",
+                            "Column": {
+                                "DataSetIdentifier": "route_otp_summary",
+                                "ColumnName": "routeshortname"
+                            },
+                            "Limit": 10,
+                            "AggregationSortConfigurations": [
+                                {
+                                    "Column": {
+                                        "DataSetIdentifier": "route_otp_summary",
+                                        "ColumnName": "total_obs"
+                                    },
+                                    "SortDirection": "DESC",
+                                    "AggregationFunction": {
+                                        "NumericalAggregationFunction": {
+                                            "SimpleNumericalAggregation": "SUM"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "ScopeConfiguration": {
+                    "SelectedSheets": {
+                        "SheetVisualScopingConfigurations": [
+                            {
+                                "SheetId": "36fa3f05-8a7a-4681-ada8-e017cb38eea1_dc737235-fe94-46b3-b369-93df6423a2d3",
+                                "Scope": "SELECTED_VISUALS",
+                                "VisualIds": [
+                                    "36fa3f05-8a7a-4681-ada8-e017cb38eea1_230e9473-ed20-4fb5-839d-1fcc1620179d"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "Status": "ENABLED",
+                "CrossDataset": "SINGLE_DATASET"
+            }
+        ],
+        "AnalysisDefaults": {
+            "DefaultNewSheetConfiguration": {
+                "InteractiveLayoutConfiguration": {
+                    "Grid": {
+                        "CanvasSizeOptions": {
+                            "ScreenCanvasSizeOptions": {
+                                "ResizeOption": "FIXED",
+                                "OptimizedViewPortWidth": "1600px"
+                            }
+                        }
+                    }
+                },
+                "SheetContentType": "INTERACTIVE"
+            }
+        },
+        "Options": {
+            "WeekStart": "SUNDAY",
+            "QBusinessInsightsStatus": "DISABLED",
+            "ExcludedDataSetArns": []
+        }
+    }
+}

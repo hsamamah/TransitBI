@@ -91,8 +91,11 @@ def parse_feed_info(zip_bytes: bytes) -> dict:
             lines = content.strip().splitlines()
             if len(lines) < 2:
                 return {}
-            headers = [h.strip() for h in lines[0].split(',')]
-            values  = [v.strip() for v in lines[1].split(',')]
+            # Use csv.reader to handle quoted fields (e.g. "King County Metro, Inc.")
+            import csv as _csv
+            reader = _csv.reader(lines)
+            headers = [h.strip() for h in next(reader)]
+            values  = [v.strip() for v in next(reader)]
             return dict(zip(headers, values))
     except Exception as e:
         logger.warning(f"Could not parse feed_info.txt: {e}")

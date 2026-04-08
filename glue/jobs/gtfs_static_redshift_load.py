@@ -136,47 +136,25 @@ def get_staging_prefix():
         return prefix
 
     # ── Scheduled path ────────────────────────────────────────────────────────
+    # We always know what today's prefix should be — just verify it exists.
+    # The previous 3-level paginated enumeration was O(N API calls) for N date
+    # folders, then immediately compared to today_prefix anyway.
     today_prefix = (
         'gtfs-static/combined/'
         + datetime.utcnow().strftime('%Y/%m/%d') + '/'
     )
-
-    prefixes = []
-    for page in paginator.paginate(
-        Bucket=STAGING_BUCKET,
-        Prefix='gtfs-static/combined/',
-        Delimiter='/'
-    ):
-        for p in page.get('CommonPrefixes', []):
-            for page2 in paginator.paginate(
-                Bucket=STAGING_BUCKET,
-                Prefix=p['Prefix'],
-                Delimiter='/'
-            ):
-                for p2 in page2.get('CommonPrefixes', []):
-                    for page3 in paginator.paginate(
-                        Bucket=STAGING_BUCKET,
-                        Prefix=p2['Prefix'],
-                        Delimiter='/'
-                    ):
-                        for p3 in page3.get('CommonPrefixes', []):
-                            prefixes.append(p3['Prefix'])
-
-    if not prefixes:
-        raise Exception('No staged date folders found in S3')
-
-    prefixes.sort(reverse=True)
-    latest = prefixes[0]
-
-    if latest != today_prefix:
+    result = s3.list_objects_v2(
+        Bucket=STAGING_BUCKET, Prefix=today_prefix, MaxKeys=1
+    )
+    if not result.get('Contents'):
         raise Exception(
-            f"Latest staged prefix ({latest}) does not match today's expected "
-            f"prefix ({today_prefix}). Ingestion may have failed or used a "
-            f"fallback. Aborting load to avoid loading stale data silently."
+            f"Today's staged prefix not found: s3://{STAGING_BUCKET}/{today_prefix}. "
+            f"Ingestion may have failed or used a fallback. "
+            f"Aborting load to avoid loading stale data silently."
         )
 
-    logger.info(f'Staging prefix verified for today: {latest}')
-    return latest
+    logger.info(f'Staging prefix verified for today: {today_prefix}')
+    return today_prefix
 
 
 def get_file_columns(s3_key):

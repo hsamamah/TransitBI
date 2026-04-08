@@ -433,21 +433,27 @@ def load_sql(target_date: str) -> str:
     -- ── Peak vehicle count per agency ────────────────────────
     -- MAX(active_trips) over all minutes = PeakVehicleCount (VOMS).
     -- PeakTimeKey = the timekey of the minute with most active trips.
-    -- On ties, MAX(timekey) picks the latest peak minute.
-    voms_peak AS (
+    -- On ties, the latest peak minute wins (ORDER BY active_trips DESC, timekey DESC).
+    -- Window functions replace the previous correlated subquery which was O(n²).
+    voms_ranked AS (
         SELECT
             agencykey,
             datekey,
-            MAX(active_trips)                                      AS peak_vehicle_count,
-            MAX(CASE
-                WHEN active_trips = (
-                    SELECT MAX(v2.active_trips)
-                    FROM voms_per_minute v2
-                    WHERE v2.agencykey = voms_per_minute.agencykey
-                      AND v2.datekey   = voms_per_minute.datekey
-                ) THEN timekey ELSE NULL END)                      AS peak_timekey
+            MAX(active_trips) OVER (PARTITION BY agencykey, datekey)  AS peak_vehicle_count,
+            FIRST_VALUE(timekey) OVER (
+                PARTITION BY agencykey, datekey
+                ORDER BY active_trips DESC, timekey DESC
+                ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            )                                                          AS peak_timekey
         FROM voms_per_minute
-        GROUP BY agencykey, datekey
+    ),
+    voms_peak AS (
+        SELECT DISTINCT
+            agencykey,
+            datekey,
+            peak_vehicle_count,
+            peak_timekey
+        FROM voms_ranked
     )
 
     -- ── Final INSERT SELECT ───────────────────────────────────

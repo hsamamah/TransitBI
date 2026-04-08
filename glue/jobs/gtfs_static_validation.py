@@ -156,32 +156,32 @@ def check_required_columns(table_name: str, df) -> dict:
     }
 
 def check_nulls(table_name: str, df) -> dict:
-    """Check for NULLs in key fields."""
+    """Check for NULLs in key fields — single Spark action for all columns."""
     if table_name not in NULL_CHECK_COLUMNS:
         return {'passed': True, 'note': 'No null checks defined'}
-    
-    results = {}
-    all_passed = True
-    actual_cols = [c.lower() for c in df.columns]
-    
-    for col in NULL_CHECK_COLUMNS[table_name]:
-        if col.lower() not in actual_cols:
-            results[col] = {'null_count': 'column missing', 'passed': False}
-            all_passed = False
-            continue
-        null_count = df.filter(F.col(col).isNull()).count()
-        passed = null_count == 0
-        results[col] = {
-            'null_count': null_count,
-            'passed': passed
-        }
-        if not passed:
-            all_passed = False
-    
-    return {
-        'columns': results,
-        'passed': all_passed
-    }
+
+    actual_cols = set(c.lower() for c in df.columns)
+    key_cols    = NULL_CHECK_COLUMNS[table_name]
+
+    missing = [c for c in key_cols if c.lower() not in actual_cols]
+    present = [c for c in key_cols if c.lower() in actual_cols]
+
+    results    = {c: {'null_count': 'column missing', 'passed': False} for c in missing}
+    all_passed = len(missing) == 0
+
+    if present:
+        # One aggregation — one full scan regardless of column count
+        agg_exprs  = [F.sum(F.col(c).isNull().cast('int')).alias(c) for c in present]
+        null_counts = df.select(agg_exprs).collect()[0].asDict()
+
+        for c in present:
+            count  = null_counts[c] or 0
+            passed = count == 0
+            results[c] = {'null_count': count, 'passed': passed}
+            if not passed:
+                all_passed = False
+
+    return {'columns': results, 'passed': all_passed}
 
 def check_departure_time_format(df) -> dict:
     """
@@ -255,25 +255,31 @@ def validate_table(table_name: str) -> dict:
         result['overall_passed'] = False
         return result
 
-    # Row counts
-    result['checks']['row_counts'] = check_row_counts(table_name, df)
+    # Cache — all checks share the same DataFrame; without caching each
+    # action (count, null aggregation, distinct, regex filter) re-reads S3.
+    df.cache()
+    try:
+        # Row counts
+        result['checks']['row_counts'] = check_row_counts(table_name, df)
 
-    # Required columns
-    result['checks']['required_columns'] = check_required_columns(table_name, df)
+        # Required columns (no Spark action — schema only)
+        result['checks']['required_columns'] = check_required_columns(table_name, df)
 
-    # NULL checks
-    result['checks']['null_checks'] = check_nulls(table_name, df)
+        # NULL checks — single aggregation across all key columns
+        result['checks']['null_checks'] = check_nulls(table_name, df)
 
-    # Departure time format — only for stop_times
-    if table_name == 'gtfs_stop_times_txt':
-        result['checks']['departure_time_format'] = check_departure_time_format(df)
+        # Departure time format — only for stop_times
+        if table_name == 'gtfs_stop_times_txt':
+            result['checks']['departure_time_format'] = check_departure_time_format(df)
 
-    # Duplicate checks
-    result['checks']['duplicate_checks'] = check_duplicates(table_name, df)
+        # Duplicate checks
+        result['checks']['duplicate_checks'] = check_duplicates(table_name, df)
+    finally:
+        df.unpersist()
 
     # Overall pass/fail
     result['overall_passed'] = all(
-        check.get('passed', True) 
+        check.get('passed', True)
         for check in result['checks'].values()
     )
 
@@ -318,10 +324,8 @@ if not is_new_feed_version():
     logger.info("=== GTFS Static Validation Job completed (skipped) ===")
 else:
     
-    tables_to_validate = list(REQUIRED_COLUMNS.keys())
-    
     logger.info("New feed version detected — proceeding with validation")
-    
+
     tables_to_validate = list(REQUIRED_COLUMNS.keys())
     report = {
         'run_date': TODAY,

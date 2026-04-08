@@ -20,6 +20,7 @@ Dependencies (set in Glue Job --additional-python-modules):
 import sys
 import time
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 import requests
@@ -141,34 +142,52 @@ def save_s3(raw, agency_key, feed_type, now_utc):
     return f"s3://{S3_BUCKET_RAW}/{key}"
 
 
+def _fetch_one(agency_key, feed_type, url, now_utc):
+    """Fetch, validate, and save a single feed. Returns (ok, entities)."""
+    display = AGENCY_FEEDS[agency_key]["display_name"]
+    raw = fetch_feed(url)
+    if raw is None:
+        return False, 0
+
+    valid, n = validate_feed(raw)
+    if not valid:
+        return False, 0
+
+    dest = save_s3(raw, agency_key, feed_type, now_utc)
+    log.info(f"OK  {display}/{feed_type}: {n} entities, {len(raw):,}B -> {dest}")
+    return True, n
+
+
 def run_one_cycle(cycle_num):
-    """Fetch → validate → save to S3 for each agency × feed type."""
+    """Fetch → validate → save to S3 for all agency × feed type pairs concurrently.
+
+    All 4 feeds (2 agencies × 2 types) are fetched in parallel so a single
+    slow/timed-out feed does not delay the others. Worst-case cycle time is
+    FETCH_TIMEOUT_SECONDS (15s) instead of 4 × 15s = 60s.
+    """
     now_utc = datetime.now(timezone.utc)
     ok = 0
     fail = 0
     entities = 0
 
-    for agency_key, config in AGENCY_FEEDS.items():
-        display = config["display_name"]
+    tasks = [
+        (agency_key, feed_type, url)
+        for agency_key, config in AGENCY_FEEDS.items()
+        for feed_type, url in config["feeds"].items()
+    ]
 
-        for feed_type, url in config["feeds"].items():
-            raw = fetch_feed(url)
-            if raw is None:
+    with ThreadPoolExecutor(max_workers=len(tasks)) as pool:
+        futures = {
+            pool.submit(_fetch_one, agency_key, feed_type, url, now_utc): (agency_key, feed_type)
+            for agency_key, feed_type, url in tasks
+        }
+        for future in as_completed(futures):
+            success, n = future.result()
+            if success:
+                ok += 1
+                entities += n
+            else:
                 fail += 1
-                continue
-
-            valid, n = validate_feed(raw)
-            if not valid:
-                fail += 1
-                continue
-
-            dest = save_s3(raw, agency_key, feed_type, now_utc)
-            entities += n
-            ok += 1
-            log.info(
-                f"OK  {display}/{feed_type}: "
-                f"{n} entities, {len(raw):,}B -> {dest}"
-            )
 
     return {"ok": ok, "fail": fail, "entities": entities}
 

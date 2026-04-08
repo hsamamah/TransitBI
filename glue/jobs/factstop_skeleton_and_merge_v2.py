@@ -141,7 +141,7 @@ def resolve_args():
 def run_sql(sql, description='', timeout=None, fetch_results=False):
     """
     Execute SQL via Redshift Data API and poll until complete.
-    Returns the describe_statement response.
+    Returns (status_resp, query_id) tuple.
     If fetch_results=True, also fetches and prints result rows.
     """
     timeout = timeout or REDSHIFT_POLL_TIMEOUT
@@ -171,7 +171,7 @@ def run_sql(sql, description='', timeout=None, fetch_results=False):
             if fetch_results and rows and rows > 0:
                 _print_result_rows(query_id)
 
-            return status_resp
+            return status_resp, query_id
 
         elif status in ('FAILED', 'ABORTED'):
             err = status_resp.get('Error', 'No error detail')
@@ -217,22 +217,22 @@ def preflight_check():
     zero-key rows for every stop visit.
     """
     print("\n  → Pre-flight: checking DimTrip is populated")
-    resp = run_sql(
-        f"""
+    # run_sql returns (status_resp, query_id) — use query_id to fetch results once.
+    # fetch_results=False avoids a redundant get_statement_result call inside run_sql.
+    _, query_id = run_sql(
+        """
         SELECT COUNT(*) AS dimtrip_rows
         FROM dw.DimTrip
         WHERE tripkey > 0;
         """,
         description="Pre-flight DimTrip row count",
-        fetch_results=True
+        fetch_results=False
     )
 
-    # Fetch the count value
     try:
-        result  = rs_data.get_statement_result(Id=resp['Id'] if 'Id' in resp else None)
-        count   = int(result['Records'][0][0].get('longValue', 0))
+        result = rs_data.get_statement_result(Id=query_id)
+        count  = int(result['Records'][0][0].get('longValue', 0))
     except Exception:
-        # If we can't read the count, fail safe
         raise RuntimeError(
             "Pre-flight check failed — could not read DimTrip row count. "
             "Ensure DimTrip is populated before running skeleton insert."

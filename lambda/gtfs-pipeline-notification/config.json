@@ -6,7 +6,7 @@
   "Timeout": 30,
   "Environment": {
     "Variables": {
-      "SNS_TOPIC_ARN": "arn:aws:sns:us-west-2:805699509606:haniqa12345gmail"
+      "SNS_TOPIC_ARN": "arn:aws:sns:us-west-2:805699509606:transit-daily-digest"
     }
   },
   "Layers": [],

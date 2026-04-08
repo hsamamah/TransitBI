@@ -52,21 +52,28 @@ echo "========================================================"
 
 
 # ── Step 1: SNS topic ─────────────────────────────────────
-log "Step 1: SNS topic — transit-failure-alerts"
+log "Step 1: SNS topics"
 
+# Load DIGEST_EMAIL from .env if present
+DOTENV="${SCRIPT_DIR}/../.env"
+if [[ -f "${DOTENV}" ]]; then
+    set -a; source "${DOTENV}"; set +a
+fi
+
+# 1a — Failure alerts topic
 EXISTING_TOPIC=$(aws sns list-topics --region "${REGION}" \
     --query "Topics[?TopicArn=='${FAILURE_SNS_ARN}'].TopicArn" \
     --output text 2>/dev/null || true)
 
 if [[ -z "${EXISTING_TOPIC}" ]]; then
-    echo "    Creating SNS topic..."
+    echo "    Creating SNS topic: ${FAILURE_SNS_TOPIC}"
     run aws sns create-topic \
-        --name "transit-failure-alerts" \
+        --name "${FAILURE_SNS_TOPIC}" \
         --region "${REGION}" \
         --tags "Key=Project,Value=seattle-transit-dw" "Key=ManagedBy,Value=deploy-script" \
         --output text --query 'TopicArn'
 else
-    echo "    SNS topic already exists — skipping"
+    echo "    SNS topic already exists: ${FAILURE_SNS_TOPIC}"
 fi
 
 echo "    ARN: ${FAILURE_SNS_ARN}"
@@ -75,6 +82,45 @@ echo "    NOTE: Subscribe your email to this topic manually if not already done:
 echo "      aws sns subscribe --topic-arn ${FAILURE_SNS_ARN} \\"
 echo "        --protocol email --notification-endpoint YOUR_EMAIL \\"
 echo "        --region ${REGION}"
+
+# 1b — Daily digest topic
+EXISTING_DIGEST=$(aws sns list-topics --region "${REGION}" \
+    --query "Topics[?TopicArn=='${DIGEST_SNS_ARN}'].TopicArn" \
+    --output text 2>/dev/null || true)
+
+if [[ -z "${EXISTING_DIGEST}" ]]; then
+    echo "    Creating SNS topic: ${DIGEST_SNS_TOPIC}"
+    run aws sns create-topic \
+        --name "${DIGEST_SNS_TOPIC}" \
+        --region "${REGION}" \
+        --tags "Key=Project,Value=seattle-transit-dw" "Key=ManagedBy,Value=deploy-script" \
+        --output text --query 'TopicArn'
+else
+    echo "    SNS topic already exists: ${DIGEST_SNS_TOPIC}"
+fi
+
+echo "    ARN: ${DIGEST_SNS_ARN}"
+
+# Subscribe DIGEST_EMAIL if provided via .env
+if [[ -n "${DIGEST_EMAIL:-}" ]]; then
+    EXISTING_SUB=$(aws sns list-subscriptions-by-topic \
+        --topic-arn "${DIGEST_SNS_ARN}" --region "${REGION}" \
+        --query "Subscriptions[?Endpoint=='${DIGEST_EMAIL}'].SubscriptionArn" \
+        --output text 2>/dev/null || true)
+    if [[ -z "${EXISTING_SUB}" ]]; then
+        echo "    Subscribing ${DIGEST_EMAIL} to ${DIGEST_SNS_TOPIC}..."
+        run aws sns subscribe \
+            --topic-arn "${DIGEST_SNS_ARN}" \
+            --protocol email \
+            --notification-endpoint "${DIGEST_EMAIL}" \
+            --region "${REGION}"
+        echo "    ⚠ Check your inbox to confirm the subscription"
+    else
+        echo "    ${DIGEST_EMAIL} already subscribed"
+    fi
+else
+    echo "    NOTE: Set DIGEST_EMAIL in .env to auto-subscribe your email"
+fi
 
 
 # ── Step 2: IAM role for the Lambda ──────────────────────

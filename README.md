@@ -168,7 +168,7 @@ bash deploy/deploy_notifications.sh
 **Subscribe your email** (one-time, not automated):
 ```bash
 aws sns subscribe \
-  --topic-arn arn:aws:sns:us-west-2:805699509606:transit-failure-alerts \
+  --topic-arn arn:aws:sns:$(aws sts get-caller-identity --query Account --output text):transit-failure-alerts \
   --protocol email --notification-endpoint YOUR_EMAIL \
   --region us-west-2
 ```
@@ -205,7 +205,7 @@ See [`scripts/README.md`](scripts/README.md) for full usage and cost estimates.
 | S3 | seattle-transit-raw/staging/processed | Data lake |
 | DynamoDB | seattle-transit-pipeline | Pipeline parameter store + audit trail |
 | EventBridge | gtfs-rt-polling-schedule · glue-job-failure · glue-workflow-failure | Polling trigger + failure routing |
-| SNS | haniqa12345gmail (daily digest) · transit-failure-alerts (failure alerts) | Email notifications |
+| SNS | transit-daily-digest (daily digest) · transit-failure-alerts (failure alerts) | Email notifications |
 | Lambda | gtfs-rt-polling · gtfs-pipeline-notification · transit-failure-notifier | Feed polling + alerting |
 | CloudWatch | 3 alarms (one per Lambda function) | Lambda error alerting → SNS |
 | QuickSight | 1 data source, 6 SPICE datasets, 1 shared folder, 1 dashboard | BI dashboards |

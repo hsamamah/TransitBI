@@ -1,12 +1,12 @@
 {
   "Name": "transit-glue-workflow-failure",
-  "Description": "Triggers transit-failure-notifier Lambda when a Glue workflow run enters FAILED or STOPPED state",
+  "Description": "Triggers transit-failure-notifier Lambda when a Glue workflow run enters FAILED, STOPPED, TIMEOUT, or ERROR state",
   "State": "ENABLED",
   "EventPattern": {
     "source": ["aws.glue"],
     "detail-type": ["Glue Workflow Run Status"],
     "detail": {
-      "state": ["FAILED", "STOPPED"]
+      "state": ["FAILED", "STOPPED", "TIMEOUT", "ERROR"]
     }
   }
 }

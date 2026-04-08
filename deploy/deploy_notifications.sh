@@ -231,13 +231,13 @@ _upsert_eb_rule() {
 
 _upsert_eb_rule \
     "transit-glue-job-failure" \
-    "Triggers ${LAMBDA_NAME} when any Glue job enters FAILED state" \
-    '{"source":["aws.glue"],"detail-type":["Glue Job State Change"],"detail":{"state":["FAILED"]}}'
+    "Triggers ${LAMBDA_NAME} when any Glue job enters FAILED, TIMEOUT, or ERROR state" \
+    '{"source":["aws.glue"],"detail-type":["Glue Job State Change"],"detail":{"state":["FAILED","TIMEOUT","ERROR"]}}'
 
 _upsert_eb_rule \
     "transit-glue-workflow-failure" \
-    "Triggers ${LAMBDA_NAME} when a Glue workflow run enters FAILED or STOPPED state" \
-    '{"source":["aws.glue"],"detail-type":["Glue Workflow Run Status"],"detail":{"state":["FAILED","STOPPED"]}}'
+    "Triggers ${LAMBDA_NAME} when a Glue workflow run enters FAILED, STOPPED, TIMEOUT, or ERROR state" \
+    '{"source":["aws.glue"],"detail-type":["Glue Workflow Run Status"],"detail":{"state":["FAILED","STOPPED","TIMEOUT","ERROR"]}}'
 
 
 # ── Step 5: CloudWatch Alarms for Lambda errors ───────────

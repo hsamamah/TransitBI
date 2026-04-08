@@ -1,12 +1,12 @@
 {
   "Name": "transit-glue-job-failure",
-  "Description": "Triggers transit-failure-notifier Lambda when any Glue job enters FAILED state",
+  "Description": "Triggers transit-failure-notifier Lambda when any Glue job enters FAILED, TIMEOUT, or ERROR state",
   "State": "ENABLED",
   "EventPattern": {
     "source": ["aws.glue"],
     "detail-type": ["Glue Job State Change"],
     "detail": {
-      "state": ["FAILED"]
+      "state": ["FAILED", "TIMEOUT", "ERROR"]
     }
   }
 }

@@ -129,21 +129,20 @@ def read_pb_from_s3(s3_key):
         return None
 
 
-S3_READ_WORKERS = 32
+S3_READ_WORKERS = 16
 
 def read_pb_files_parallel(s3_keys):
     """
     Download and parse .pb files in parallel.
-    Returns a list of FeedMessage objects (None entries omitted).
+    Yields FeedMessage objects as they complete (generator) so callers can
+    process each feed immediately rather than accumulating all in memory.
     """
-    feeds = []
     with ThreadPoolExecutor(max_workers=S3_READ_WORKERS) as pool:
         futures = {pool.submit(read_pb_from_s3, key): key for key in s3_keys}
         for future in as_completed(futures):
             feed = future.result()
             if feed is not None:
-                feeds.append(feed)
-    return feeds
+                yield feed
 
 
 def write_csv_to_staging(records, fields, agency, date_str, file_name):
@@ -382,15 +381,18 @@ def main():
         tu_files = list_pb_files(agency_key, 'trip-updates', target_date)
         print(f"  Found {len(tu_files)} trip-update .pb files")
 
-        tu_records = []
+        # Incremental dedup: maintain a dict keyed by (trip_id, stop_id, stop_sequence,
+        # service_date) and keep only the record with the latest feed_timestamp_utc.
+        # This avoids accumulating all records in memory before reducing them.
+        tu_unique = {}
         for feed in read_pb_files_parallel(tu_files):
-            tu_records.extend(extract_trip_updates(feed, agency_key))
-
-        tu_records = deduplicate_latest(
-            tu_records,
-            key_fields=['trip_id', 'stop_id', 'stop_sequence', 'service_date'],
-            sort_field='feed_timestamp_utc',
-        )
+            for record in extract_trip_updates(feed, agency_key):
+                key = (record['trip_id'], record['stop_id'],
+                       record['stop_sequence'], record['service_date'])
+                existing = tu_unique.get(key)
+                if existing is None or record['feed_timestamp_utc'] > existing['feed_timestamp_utc']:
+                    tu_unique[key] = record
+        tu_records = list(tu_unique.values())
         print(f"  Trip updates after dedup: {len(tu_records)}")
 
         uri = write_csv_to_staging(
@@ -402,15 +404,14 @@ def main():
         vp_files = list_pb_files(agency_key, 'vehicle-positions', target_date)
         print(f"  Found {len(vp_files)} vehicle-position .pb files")
 
-        vp_records = []
+        vp_unique = {}
         for feed in read_pb_files_parallel(vp_files):
-            vp_records.extend(extract_vehicle_positions(feed, agency_key))
-
-        vp_records = deduplicate_latest(
-            vp_records,
-            key_fields=['vehicle_id', 'timestamp_utc'],
-            sort_field='feed_timestamp_utc',
-        )
+            for record in extract_vehicle_positions(feed, agency_key):
+                key = (record['vehicle_id'], record['timestamp_utc'])
+                existing = vp_unique.get(key)
+                if existing is None or record['feed_timestamp_utc'] > existing['feed_timestamp_utc']:
+                    vp_unique[key] = record
+        vp_records = list(vp_unique.values())
         print(f"  Vehicle positions after dedup: {len(vp_records)}")
 
         uri = write_csv_to_staging(

@@ -76,10 +76,11 @@ def aws_architecture():
             glue_fsd     = Glue("factserviceday-load")
 
         with Cluster("Static Pipeline (Glue Workflow)", graph_attr=CLUSTER_ATTR):
-            glue_ingest  = Glue("gtfs-static-ingestion")
-            glue_crawler = GlueDataCatalog("gtfs-static-crawler")
-            glue_valid   = Glue("gtfs-static-validation")
-            glue_rsload  = Glue("gtfs-static-redshift-load")
+            glue_ingest   = Glue("gtfs-static-ingestion")
+            glue_crawler  = GlueDataCatalog("gtfs-static-crawler\n\nData Catalog")
+            glue_valid    = Glue("gtfs-static-validation")
+            glue_rsload   = Glue("gtfs-static-redshift-load")
+            lam_notif     = Lambda("gtfs-pipeline-\nnotification")
 
         with Cluster("Data Warehouse", graph_attr=CLUSTER_ATTR):
             rs = Redshift("Redshift Serverless\n\nworkgroup: team  ·  db: dev")
@@ -88,10 +89,12 @@ def aws_architecture():
             qs = Quicksight("QuickSight\n\n6 SPICE datasets\n1 dashboard")
 
         with Cluster("Alerting", graph_attr=CLUSTER_ATTR):
-            eb_fail  = Eventbridge("EventBridge\n\njob failure rules")
-            lam_fail = Lambda("transit-failure-notifier")
-            sns_fail = SNS("transit-failure-alerts")
-            cw       = Cloudwatch("CloudWatch Alarms\n\nLambda errors")
+            eb_fail   = Eventbridge("EventBridge\n\njob failure rules")
+            eb_digest = Eventbridge("EventBridge\n\npipeline-complete")
+            lam_fail  = Lambda("transit-failure-notifier")
+            sns_fail  = SNS("transit-failure-alerts")
+            sns_digest= SNS("transit-daily-digest")
+            cw        = Cloudwatch("CloudWatch Alarms\n\nfeed health + Lambda")
 
         # Ingestion flow
         eb_poll   >> lam_poll  >> s3_raw
@@ -116,13 +119,16 @@ def aws_architecture():
         glue_crawler >> glue_valid
         glue_valid   >> glue_rsload
         glue_rsload  >> rs
+        glue_rsload  >> lam_notif
 
         # BI
         rs >> qs
 
         # Alerting
-        eb_fail  >> lam_fail >> sns_fail
-        cw       >> sns_fail
+        eb_fail   >> lam_fail >> sns_fail
+        eb_digest >> lam_notif >> sns_digest
+        cw        >> sns_fail
+        cw        >> sns_digest
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -209,6 +215,51 @@ def alerting_flow():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Diagram 4 — Glue Pipeline Workflows
+# ─────────────────────────────────────────────────────────────────────────────
+def glue_pipelines():
+    with Diagram(
+        "Seattle Transit DW — Glue Pipelines",
+        filename=str(OUT / "glue_pipelines"),
+        outformat="png",
+        show=False,
+        graph_attr={**GRAPH_ATTR, "splines": "ortho", "rankdir": "TB"},
+        node_attr=NODE_ATTR,
+        direction="TB",
+    ):
+        with Cluster("gtfs-static-pipeline  ·  07:00 PST daily", graph_attr=CLUSTER_ATTR):
+            eb_static   = Eventbridge("gtfs-static-daily-start\n\nscheduled trigger")
+            ingest      = Glue("gtfs-static-ingestion\n\ndownload + parse GTFS ZIP")
+            crawler     = GlueDataCatalog("gtfs-static-crawler\n\nupdate Data Catalog")
+            validation  = Glue("gtfs-static-validation\n\nschema + referential checks")
+            rs_load     = Glue("gtfs-static-redshift-load\n\nCOPY → stg.*")
+            notif       = Lambda("gtfs-pipeline-notification\n\ndaily digest email")
+
+        with Cluster("gtfs-rt-daily-pipeline  ·  08:00 PST daily", graph_attr=CLUSTER_ATTR):
+            eb_rt     = Eventbridge("gtfs-rt-daily-start\n\nscheduled trigger")
+            parse     = Glue("gtfs-rt-parse-load-glue\n\nparse .pb → COPY stg.*")
+            inspector = Glue("transit-pipeline-inspector\n\nwrite dates to DynamoDB")
+            ddb       = Dynamodb("seattle-transit-pipeline\n\npipeline params (7-day TTL)")
+            stop_load = Glue("factstop-skeleton-\nand-merge-load")
+            trip_load = Glue("facttrip-skeleton-\nand-merge-load")
+            fsd_load  = Glue("factserviceday-load\n\naggregates per agency/day")
+
+        rs = Redshift("Redshift Serverless\n\nworkgroup: team  ·  db: dev")
+        sns = SNS("transit-daily-digest")
+
+        # Static chain
+        eb_static >> ingest >> crawler >> validation >> rs_load >> rs
+        rs_load >> notif >> sns
+
+        # RT chain
+        eb_rt >> parse >> inspector >> ddb
+        ddb >> stop_load >> rs
+        ddb >> trip_load >> rs
+        stop_load >> fsd_load >> rs
+        trip_load >> fsd_load
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Main
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
@@ -219,4 +270,6 @@ if __name__ == "__main__":
     print("  ✓ data_flow.png")
     alerting_flow()
     print("  ✓ alerting_flow.png")
+    glue_pipelines()
+    print("  ✓ glue_pipelines.png")
     print("Done.")

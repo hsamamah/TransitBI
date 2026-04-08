@@ -39,6 +39,14 @@ Assumed by Redshift Serverless for COPY from S3.
 
 **Trust:** `redshift.amazonaws.com`
 
+### transit-failure-notifier-role
+Assumed by the `transit-failure-notifier` Lambda function.
+
+**Trust:** `lambda.amazonaws.com`
+
+**Inline policies:**
+- `TransitFailureNotifierPolicy` → `logs:CreateLogGroup/Stream/PutLogEvents`, `sns:Publish` to `transit-failure-alerts`, `glue:GetJobRun/GetWorkflowRun`
+
 ---
 
 ## Groups

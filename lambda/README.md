@@ -40,7 +40,7 @@ Fetches all 4 GTFS-RT feeds (2 agencies × 2 feed types) on every invocation and
 
 ## gtfs-pipeline-notification
 
-**Trigger:** Called after the static pipeline completes (manual or scheduled via EventBridge)
+**Trigger:** `gtfs-static-pipeline-complete` EventBridge rule — fires when the `gtfs-static-pipeline` Glue workflow reaches `SUCCEEDED` state
 
 Reads pipeline run metadata from DynamoDB (`seattle-transit-pipeline` table) and sends a formatted daily summary to SNS, including:
 - Pipeline run status and timestamp
@@ -49,7 +49,7 @@ Reads pipeline run metadata from DynamoDB (`seattle-transit-pipeline` table) and
 - Fallback events (if stale data was used)
 
 **Environment variables:**
-- `SNS_TOPIC_ARN` — SNS topic for notifications
+- `SNS_TOPIC_ARN` — ARN of `transit-daily-digest` SNS topic
 
 **Runtime:** Python 3.12, 128 MB, 30s timeout
 
@@ -75,14 +75,17 @@ CloudWatch Alarms for Lambda function errors also route directly to the same SNS
 
 ## Deploy
 
-Lambda functions are deployed by `deploy/deploy_notifications.sh` (failure-notifier) and manually for the others. Each function has a `config.json` with runtime settings:
+All three Lambda functions are deployed by `deploy/deploy_notifications.sh`. Each function has a `config.json` with runtime settings.
 
 ```bash
-bash deploy/deploy_notifications.sh        # deploys failure-notifier
+bash deploy/deploy_notifications.sh        # deploy all three functions + EventBridge rules + alarms
 bash deploy/deploy_notifications.sh --dry-run
 ```
 
-The `gtfs-rt-polling` and `gtfs-pipeline-notification` functions do not have a dedicated deploy script — they are managed via the AWS console or deployed manually using their `config.json`.
+Deploy order within the script:
+- **Step 3** — `transit-failure-notifier` (code + config + IAM role)
+- **Step 3b** — `gtfs-rt-polling` (code + config)
+- **Step 3c** — `gtfs-pipeline-notification` (code + config)
 
 ---
 

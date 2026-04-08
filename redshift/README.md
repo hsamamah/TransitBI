@@ -85,9 +85,23 @@ bash deploy/deploy_redshift.sh --views-only # redeploy views only (fast)
 bash deploy/deploy_redshift.sh --dry-run    # print SQL without executing
 ```
 
+**Deploy steps (in order):**
+
+| Step | Action |
+|------|--------|
+| 0 | Create Redshift Serverless namespace (`transit`) + workgroup (`team`) if absent. Waits until workgroup is `AVAILABLE`. |
+| 1 | `CREATE SCHEMA IF NOT EXISTS stg / dw` |
+| 2 | `stg_tables.sql` — staging table DDL |
+| 3 | `dim_tables.sql` — dimension table DDL |
+| 4 | `fact_tables.sql` — fact table DDL |
+| 4b | `dw_tables.sql` — full `dw` schema snapshot (safety net for fresh deploys) |
+| 5 | All 10 views — `CREATE OR REPLACE VIEW` |
+| 6 | `GRANT` statements — Glue role, team members, `quicksight_user` |
+
 **Idempotency:**
 - DDL uses `CREATE TABLE IF NOT EXISTS` — never drops or truncates existing data
 - Views use `CREATE OR REPLACE VIEW` — always applies the latest definition
+- Step 0 namespace/workgroup creation is fully idempotent
 
 **Connection:** Redshift Serverless workgroup `team`, database `dev`, via Redshift Data API (polls until complete).
 

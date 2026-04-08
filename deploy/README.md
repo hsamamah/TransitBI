@@ -25,7 +25,7 @@ bash deploy/deploy_all.sh --glue-only
 | `deploy_all.sh` | Master script — runs all others in dependency order | `--dry-run`, `--glue-only` |
 | `deploy_iam.sh` | IAM roles, managed policies, groups, user memberships | `--dry-run` |
 | `deploy_redshift.sh` | DDL schemas/tables + views via Redshift Data API | `--dry-run`, `--views-only` |
-| `deploy_glue.sh` | Glue jobs, workflows, triggers; uploads scripts to S3 | `--dry-run`, `--upload-only` |
+| `deploy_glue.sh` | Glue jobs, workflows, triggers, Glue crawler; uploads scripts to S3 | `--dry-run`, `--upload-only` |
 | `deploy_quicksight.sh` | QuickSight data sources, datasets, analyses, folder membership | `--dry-run`, `--refresh-only` |
 | `deploy_notifications.sh` | SNS topic, failure-notifier Lambda, EventBridge rules, CW alarms | `--dry-run` |
 
@@ -69,8 +69,18 @@ source deploy/config.env
 | `REDSHIFT_COPY_ROLE` | `arn:aws:iam::…:role/RedshiftS3CopyRole` | IAM role for Redshift COPY |
 | `RS_WORKGROUP` | `team` | Redshift Serverless workgroup |
 | `RS_DATABASE` | `dev` | Redshift database name |
+| `FAILURE_SNS_ARN` | `arn:aws:sns:…:transit-failure-alerts` | SNS topic for Glue/Lambda failure alerts |
+| `DIGEST_SNS_ARN` | `arn:aws:sns:…:transit-daily-digest` | SNS topic for daily pipeline digest |
+| `FAILURE_NOTIFIER_LAMBDA` | `transit-failure-notifier` | Lambda function name (used by IAM + notifications) |
+| `QS_VPC` | `vpc-0a11677a4786d95db` | VPC ID for QuickSight → Redshift connection |
+| `QS_SECURITY_GROUP` | `sg-0f60cd6f1db33cff9` | Security group for Redshift workgroup + QS VPC connection |
+| `QS_SUBNETS` | `subnet-… subnet-…` | Space-separated subnet IDs (all AZs) — workgroup + VPC connection |
+| `QS_VPC_CONNECTION_NAME` | `seattle-transit-vpc` | Stable name for QuickSight VPC connection (looked up at deploy time) |
+| `QS_SERVICE_ROLE_ARN` | `arn:aws:iam::…:role/aws-quicksight-service-role-v0` | QuickSight service role (created when QS first enabled) |
 
-**Secrets** (API keys, passwords) are never in `config.env` — they are injected at runtime via AWS Secrets Manager or environment variables set in CI.
+**Account-specific vars:** `QS_VPC`, `QS_SECURITY_GROUP`, `QS_SUBNETS` are tied to the VPC in this AWS account. Update all three when deploying to a new account — lookup commands are in the comments in `config.env`.
+
+**Secrets** (API keys, passwords) are never in `config.env` — they are loaded from `.env` (git-ignored) at deploy time. Copy `.env.example` to `.env` and fill in `DIGEST_EMAIL` and `OBA_API_KEY`.
 
 ---
 

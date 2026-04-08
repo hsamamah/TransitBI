@@ -43,6 +43,18 @@ quicksight/
 
 ## Deploy
 
+**Deploy steps (in order):**
+
+| Step | Action |
+|------|--------|
+| 0 | Look up VPC connection by name (`QS_VPC_CONNECTION_NAME`); create if absent and wait until `AVAILABLE` |
+| 1 | Upsert Redshift data source |
+| 2 | Upsert all 6 SPICE datasets |
+| 3 | Trigger SPICE refresh for all 6 datasets |
+| 4 | Create shared folder + add all assets as members + grant team permissions |
+| 5 | Deploy analyses from `quicksight/analyses/*.json` |
+| 6 | Deploy dashboards from `quicksight/dashboards/*.json` |
+
 ```bash
 # Full deploy — upserts data source, all 6 datasets, analyses, dashboards; triggers SPICE refresh
 bash deploy/deploy_quicksight.sh

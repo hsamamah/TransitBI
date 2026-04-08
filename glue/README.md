@@ -9,13 +9,15 @@ Two daily Glue workflows run in sequence via scheduled triggers:
 
 ### 1. `gtfs-static-pipeline` — 07:00 PST (14:00 UTC)
 
-Ingests the GTFS static schedule feed, validates it, and loads it to Redshift.
+Ingests the GTFS static schedule feed, validates it, and loads it to Redshift. On completion, triggers a daily digest email.
 
 ```
 gtfs-static-daily-start (SCHEDULED)
   └─► gtfs-static-ingestion
-        └─► gtfs-static-validation
-              └─► gtfs-static-redshift-load
+        └─► gtfs-static-crawler   ← updates Glue Data Catalog
+              └─► gtfs-static-validation
+                    └─► gtfs-static-redshift-load
+                          └─► gtfs-pipeline-notification (Lambda)
 ```
 
 ### 2. `gtfs-rt-daily-pipeline` — 08:00 PST (15:00 UTC)
@@ -42,6 +44,7 @@ All jobs run on **Glue 4.0**, worker type **G.1X**.
 | `gtfs-static-ingestion` | `gtfs_static_ingestion.py` | 2 | 60 min | static |
 | `gtfs-static-validation` | `gtfs_static_validation.py` | 2 | 60 min | static |
 | `gtfs-static-redshift-load` | `gtfs_static_redshift_load.py` | 2 | 60 min | static |
+| `gtfs-static-crawler` | *(Glue Crawler)* | — | — | static |
 | `gtfs-rt-parse-load-glue` | `gtfs-rt-parse-load-glue.py` | 4 | 40 min | rt |
 | `transit-pipeline-inspector` | `transit_pipeline_inspector_v2.py` | 2 | 15 min | rt |
 | `factstop-skeleton-and-merge-load` | `factstop_skeleton_and_merge_v2.py` | 2 | 20 min | rt |
@@ -50,9 +53,14 @@ All jobs run on **Glue 4.0**, worker type **G.1X**.
 
 > **Not in production:** `glue_rt_polling.py` — an older Glue-based RT poller, superseded by the Lambda function at `lambda/gtfs-rt-polling/`. The active poller is the Lambda, triggered by EventBridge every 1 minute. Both write to the same S3 key format (`gtfs-rt/{agency}/{feed_type}/{YYYY/MM/DD/HHmmss}.pb`) — running both simultaneously would cause duplicate writes.
 
+![Glue Pipelines](../docs/images/glue_pipelines.png)
+
 ---
 
 ## Job Descriptions
+
+### `gtfs-static-crawler`
+Glue Crawler targeting `s3://seattle-transit-staging/gtfs-static/`. Runs after `gtfs-static-ingestion` to update the Glue Data Catalog (`seattle_transit_staging` database) so downstream jobs and ad-hoc Athena queries see the latest partitions. The Data Catalog database is created automatically if absent at deploy time.
 
 ### `gtfs_static_ingestion.py`
 Downloads the GTFS static zip from the OBA API, extracts CSV feeds, parses them (using `csv.reader` to handle quoted fields), and writes to `s3://seattle-transit-staging/gtfs-static/`. Computes a SHA-256 hash to skip re-ingestion if the feed hasn't changed.

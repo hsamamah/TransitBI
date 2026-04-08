@@ -135,6 +135,10 @@ bash deploy/deploy_quicksight.sh --refresh-only # trigger SPICE refresh only
 
 ![AWS Architecture](docs/images/aws_architecture.png)
 
+### Glue Workflows
+
+![Glue Pipelines](docs/images/glue_pipelines.png)
+
 ### Data Flow
 
 ![Data Flow](docs/images/data_flow.png)
@@ -200,15 +204,15 @@ See [`scripts/README.md`](scripts/README.md) for full usage and cost estimates.
 
 | Service | Resource | Purpose |
 |---------|----------|---------|
-| Glue | 9 jobs, 2 workflows | ETL pipeline |
+| Glue | 8 jobs, 1 crawler, 2 workflows | ETL pipeline |
 | Redshift Serverless | workgroup: `team` / namespace: `transit` / db: `dev` | Data warehouse |
 | S3 | seattle-transit-raw/staging/processed | Data lake |
 | DynamoDB | seattle-transit-pipeline | Pipeline parameter store + audit trail |
 | EventBridge | gtfs-rt-polling-schedule · glue-job-failure · glue-workflow-failure | Polling trigger + failure routing |
 | SNS | transit-daily-digest (daily digest) · transit-failure-alerts (failure alerts) | Email notifications |
 | Lambda | gtfs-rt-polling · gtfs-pipeline-notification · transit-failure-notifier | Feed polling + alerting |
-| CloudWatch | 3 alarms (one per Lambda function) | Lambda error alerting → SNS |
-| QuickSight | 1 data source, 6 SPICE datasets, 1 shared folder, 1 dashboard | BI dashboards |
+| CloudWatch | 9 alarms (Lambda errors, GTFS-RT feed health, SNS delivery) | Alerting → SNS |
+| QuickSight | 1 VPC connection, 1 data source, 6 SPICE datasets, analyses, dashboards, 1 shared folder | BI dashboards |
 | IAM | 3 roles, 3 managed policies, 1 group (TransitDWTeam), 4 users | Access control |
 
 ---
@@ -225,7 +229,11 @@ See [`scripts/README.md`](scripts/README.md) for full usage and cost estimates.
 3. SPICE refresh (triggered in parallel for all 6 datasets)
 4. Shared folder membership + team permissions
 
-**Not managed by script (console only):** Analyses and dashboards — QuickSight analysis definitions are not CLI-portable.
+**Also managed by `deploy_quicksight.sh`:**
+5. Analyses (from `quicksight/analyses/*.json`)
+6. Dashboards (from `quicksight/dashboards/*.json`)
+
+> **Note:** After editing an analysis in the console, re-export with `bash deploy/deploy_quicksight.sh --export` and commit the updated JSON so it stays in sync with git.
 
 ---
 
@@ -263,6 +271,7 @@ cp .env.example .env
 | Variable | Used by | Where to get it |
 |----------|---------|-----------------|
 | `OBA_API_KEY` | `gtfs-rt-polling` Lambda | OneBusAway API key from transitapp.onebusaway.org |
+| `DIGEST_EMAIL` | `deploy_notifications.sh` | Email address to subscribe to the daily digest SNS topic |
 
 To change script version (e.g. after breaking changes):
 1. Update `SCRIPT_VERSION` in `config.env`

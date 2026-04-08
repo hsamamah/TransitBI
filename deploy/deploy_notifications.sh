@@ -44,7 +44,7 @@ run() {
 
 log() { echo ""; echo "  ── $*"; }
 
-LAMBDA_NAME="transit-failure-notifier"
+LAMBDA_NAME="${FAILURE_NOTIFIER_LAMBDA}"
 LAMBDA_ZIP="/tmp/${LAMBDA_NAME}.zip"
 LAMBDA_SRC="${SCRIPT_DIR}/../lambda/failure-notifier/lambda_function.py"
 LAMBDA_ROLE_NAME="transit-failure-notifier-role"
@@ -136,68 +136,12 @@ else
 fi
 
 
-# ── Step 2: IAM role for the Lambda ──────────────────────
-log "Step 2: IAM role — ${LAMBDA_ROLE_NAME}"
-
-TRUST_POLICY='{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {"Service": "lambda.amazonaws.com"},
-    "Action": "sts:AssumeRole"
-  }]
-}'
-
-ROLE_EXISTS=$(aws iam get-role --role-name "${LAMBDA_ROLE_NAME}" \
-    --query 'Role.RoleName' --output text 2>/dev/null || true)
-
-if [[ -z "${ROLE_EXISTS}" ]]; then
-    echo "    Creating IAM role..."
-    run aws iam create-role \
-        --role-name "${LAMBDA_ROLE_NAME}" \
-        --assume-role-policy-document "${TRUST_POLICY}" \
-        --output text --query 'Role.Arn'
-else
-    echo "    IAM role already exists — skipping create"
-fi
-
-# Inline policy: SNS publish + Glue get_job_run + basic Lambda execution
-INLINE_POLICY=$(cat <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "SNSPublish",
-      "Effect": "Allow",
-      "Action": "sns:Publish",
-      "Resource": "${FAILURE_SNS_ARN}"
-    },
-    {
-      "Sid": "GlueGetJobRun",
-      "Effect": "Allow",
-      "Action": "glue:GetJobRun",
-      "Resource": "*"
-    },
-    {
-      "Sid": "CloudWatchLogs",
-      "Effect": "Allow",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "arn:aws:logs:${REGION}:${ACCOUNT}:*"
-    }
-  ]
-}
-EOF
-)
-
-run aws iam put-role-policy \
-    --role-name "${LAMBDA_ROLE_NAME}" \
-    --policy-name "${LAMBDA_ROLE_NAME}-policy" \
-    --policy-document "${INLINE_POLICY}"
-echo "    Inline policy applied"
+# ── Step 2: IAM role — managed by deploy_iam.sh ──────────
+# transit-failure-notifier-role is created/updated in deploy_iam.sh
+# (Step: transit-failure-notifier-role). deploy_all.sh runs IAM
+# first, so the role is guaranteed to exist by the time this step runs.
+log "Step 2: IAM role — managed by deploy_iam.sh (skipping)"
+echo "    Role: ${LAMBDA_ROLE_NAME} — created/updated in deploy_iam.sh"
 
 
 # ── Step 3: Lambda function ───────────────────────────────

@@ -39,5 +39,6 @@ temp/
 # Claude
 .claude/settings.json
 
-# docs venv
+# virtual environments
+.venv/
 docs/.venv/

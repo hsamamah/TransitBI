@@ -66,7 +66,7 @@ if $EXPORT_ONLY; then
 
     mapfile -t all_analyses < <(
         aws quicksight list-analyses \
-            --aws-account-id "${ACCOUNT}" \
+            --aws-account-id "${QS_ACCOUNT}" \
             --region "${REGION}" \
             --query 'AnalysisSummaryList[*].[AnalysisId,Name]' \
             --output text
@@ -88,7 +88,7 @@ if $EXPORT_ONLY; then
             continue
         fi
         aws quicksight describe-analysis-definition \
-            --aws-account-id "${ACCOUNT}" \
+            --aws-account-id "${QS_ACCOUNT}" \
             --analysis-id "${id}" \
             --region "${REGION}" \
             --query '{Name:Name,AnalysisId:AnalysisId,Definition:Definition,ThemeArn:ThemeArn}' \
@@ -99,7 +99,7 @@ if $EXPORT_ONLY; then
 
     mapfile -t all_dashboards < <(
         aws quicksight list-dashboards \
-            --aws-account-id "${ACCOUNT}" \
+            --aws-account-id "${QS_ACCOUNT}" \
             --region "${REGION}" \
             --query 'DashboardSummaryList[*].[DashboardId,Name]' \
             --output text
@@ -108,7 +108,7 @@ if $EXPORT_ONLY; then
         db_id=$(echo "$row" | awk '{print $1}')
         db_name=$(echo "$row" | cut -f2-)
         aws quicksight describe-dashboard-definition \
-            --aws-account-id "${ACCOUNT}" \
+            --aws-account-id "${QS_ACCOUNT}" \
             --dashboard-id "${db_id}" \
             --region "${REGION}" \
             --query '{Name:Name,DashboardId:DashboardId,Definition:Definition}' \
@@ -122,9 +122,62 @@ fi
 
 # ── QuickSight resource IDs ───────────────────────────────────
 DATASOURCE_ID="ee6148c5-7ba2-45b8-b4a5-c721e9ab7aca"
-VPC_CONNECTION_ARN="arn:aws:quicksight:${REGION}:${ACCOUNT}:vpcConnection/c9508d2a-f178-4add-a3fb-ba52ae4c742f"
-QS_PRINCIPAL="arn:aws:quicksight:${REGION}:${ACCOUNT}:user/default/${ACCOUNT}"
+QS_PRINCIPAL="arn:aws:quicksight:${REGION}:${QS_ACCOUNT}:user/default/${QS_ACCOUNT}"
 FOLDER_ID="240636fa-ade1-4f5a-9929-67acda51d579"
+
+# =============================================================
+# STEP 0 — QuickSight VPC Connection (prerequisite for data source)
+# =============================================================
+# On a fresh deploy the VPC connection must exist before the data
+# source can be created. Look it up by name; create if missing.
+# =============================================================
+log "=== [0] QuickSight VPC Connection ==="
+
+if $DRY_RUN; then
+    warn "DRY-RUN: would create VPC connection '${QS_VPC_CONNECTION_NAME}' if absent"
+    VPC_CONNECTION_ARN="arn:aws:quicksight:${REGION}:${QS_ACCOUNT}:vpcConnection/dry-run-placeholder"
+else
+    VPC_CONNECTION_ID=$(aws quicksight list-vpc-connections \
+        --aws-account-id "${QS_ACCOUNT}" \
+        --region "${REGION}" \
+        --query "VPCConnectionSummaries[?Name=='${QS_VPC_CONNECTION_NAME}'].VPCConnectionId" \
+        --output text 2>/dev/null || echo "")
+
+    if [[ -z "${VPC_CONNECTION_ID}" ]]; then
+        log "  Creating VPC connection: ${QS_VPC_CONNECTION_NAME}"
+        SUBNET_ARRAY=$(python3 -c "
+import json, sys
+subnets = '${QS_SUBNETS}'.split()
+print(json.dumps(subnets))
+")
+        VPC_CONNECTION_ID=$(aws quicksight create-vpc-connection \
+            --aws-account-id "${QS_ACCOUNT}" \
+            --vpc-connection-id "${QS_VPC_CONNECTION_NAME}" \
+            --name "${QS_VPC_CONNECTION_NAME}" \
+            --vpc-id "${QS_VPC}" \
+            --security-group-ids "${QS_SECURITY_GROUP}" \
+            --subnet-ids ${QS_SUBNETS} \
+            --role-arn "${QS_SERVICE_ROLE_ARN}" \
+            --region "${REGION}" \
+            --query 'VPCConnection.VPCConnectionId' --output text)
+        # Wait for connection to become AVAILABLE
+        for i in $(seq 1 30); do
+            sleep 10
+            STATUS=$(aws quicksight describe-vpc-connection \
+                --aws-account-id "${QS_ACCOUNT}" \
+                --vpc-connection-id "${VPC_CONNECTION_ID}" \
+                --region "${REGION}" \
+                --query 'VPCConnection.AvailabilityStatus' --output text 2>/dev/null || echo "UNKNOWN")
+            [[ "${STATUS}" == "AVAILABLE" ]] && break
+            log "  Waiting for VPC connection... (${STATUS}, ${i}/30)"
+        done
+        ok "Created VPC connection: ${QS_VPC_CONNECTION_NAME} (${VPC_CONNECTION_ID})"
+    else
+        ok "VPC connection exists: ${QS_VPC_CONNECTION_NAME} (${VPC_CONNECTION_ID})"
+    fi
+
+    VPC_CONNECTION_ARN="arn:aws:quicksight:${REGION}:${QS_ACCOUNT}:vpcConnection/${VPC_CONNECTION_ID}"
+fi
 
 # Canonical dataset order — drives all three loops (Steps 2, 3, 4)
 DATASET_ORDER=(
@@ -148,14 +201,14 @@ declare -A DATASET_IDS=(
 
 qs_datasource_exists() {
     aws quicksight describe-data-source \
-        --aws-account-id "${ACCOUNT}" \
+        --aws-account-id "${QS_ACCOUNT}" \
         --data-source-id "$1" \
         --region "${REGION}" > /dev/null 2>&1
 }
 
 qs_dataset_exists() {
     aws quicksight describe-data-set \
-        --aws-account-id "${ACCOUNT}" \
+        --aws-account-id "${QS_ACCOUNT}" \
         --data-set-id "$1" \
         --region "${REGION}" > /dev/null 2>&1
 }
@@ -166,7 +219,7 @@ qs_dataset_exists() {
 if ! $REFRESH_ONLY; then
     log "=== [1] QuickSight Data Source ==="
 
-    RS_HOST="team.${ACCOUNT}.${REGION}.redshift-serverless.amazonaws.com"
+    RS_HOST="${RS_ENDPOINT%%:*}"  # strip :5439/dev — host only
 
     DS_PARAMS="{
         \"RedshiftParameters\": {
@@ -186,7 +239,7 @@ if ! $REFRESH_ONLY; then
         ok "Data source exists (no update needed): seattle-transit-dw"
     else
         aws quicksight create-data-source \
-            --aws-account-id "${ACCOUNT}" \
+            --aws-account-id "${QS_ACCOUNT}" \
             --data-source-id "${DATASOURCE_ID}" \
             --name "seattle-transit-dw" \
             --type REDSHIFT \
@@ -278,7 +331,7 @@ for t in tables.values():
             }]"
 
             aws quicksight create-data-set \
-                --aws-account-id "${ACCOUNT}" \
+                --aws-account-id "${QS_ACCOUNT}" \
                 --data-set-id "${dataset_id}" \
                 --name "${view_name}" \
                 --import-mode SPICE \
@@ -307,7 +360,7 @@ for view_name in "${DATASET_ORDER[@]}"; do
         dry "TRIGGER SPICE refresh: ${view_name}"
     else
         ( if aws quicksight create-ingestion \
-                  --aws-account-id "${ACCOUNT}" \
+                  --aws-account-id "${QS_ACCOUNT}" \
                   --data-set-id "${dataset_id}" \
                   --ingestion-id "${ingestion_id}" \
                   --region "${REGION}" > /dev/null 2>&1; then
@@ -339,7 +392,7 @@ if ! $REFRESH_ONLY; then
             dry "ADD dataset to folder: ${view_name}"
         else
             ( if aws quicksight create-folder-membership \
-                      --aws-account-id "${ACCOUNT}" \
+                      --aws-account-id "${QS_ACCOUNT}" \
                       --folder-id "${FOLDER_ID}" \
                       --member-id "${dataset_id}" \
                       --member-type DATASET \
@@ -357,7 +410,7 @@ if ! $REFRESH_ONLY; then
     if $DRY_RUN; then
         dry "ADD data source to folder: seattle-transit-dw"
     elif aws quicksight create-folder-membership \
-            --aws-account-id "${ACCOUNT}" \
+            --aws-account-id "${QS_ACCOUNT}" \
             --folder-id "${FOLDER_ID}" \
             --member-id "${DATASOURCE_ID}" \
             --member-type DATASOURCE \
@@ -376,7 +429,7 @@ if ! $REFRESH_ONLY; then
             dry "GRANT folder permissions to: ${team_user}"
         else
             ( if aws quicksight update-folder-permissions \
-                      --aws-account-id "${ACCOUNT}" \
+                      --aws-account-id "${QS_ACCOUNT}" \
                       --folder-id "${FOLDER_ID}" \
                       --grant-permissions "[{\"Principal\": \"${qs_user_arn}\", \"Actions\": ${FOLDER_ACTIONS}}]" \
                       --region "${REGION}" > /dev/null 2>&1; then
@@ -420,12 +473,12 @@ if ! $REFRESH_ONLY; then
 
         # Check if analysis exists
         if aws quicksight describe-analysis \
-                --aws-account-id "${ACCOUNT}" \
+                --aws-account-id "${QS_ACCOUNT}" \
                 --analysis-id "${analysis_id}" \
                 --region "${REGION}" > /dev/null 2>&1; then
 
             update_args=(
-                --aws-account-id "${ACCOUNT}"
+                --aws-account-id "${QS_ACCOUNT}"
                 --analysis-id "${analysis_id}"
                 --name "${analysis_name}"
                 --definition "${definition}"
@@ -439,7 +492,7 @@ if ! $REFRESH_ONLY; then
             fi
         else
             create_args=(
-                --aws-account-id "${ACCOUNT}"
+                --aws-account-id "${QS_ACCOUNT}"
                 --analysis-id "${analysis_id}"
                 --name "${analysis_name}"
                 --definition "${definition}"
@@ -456,7 +509,7 @@ if ! $REFRESH_ONLY; then
 
         # Add to shared folder (idempotent — suppress AlreadyExists)
         if aws quicksight create-folder-membership \
-                --aws-account-id "${ACCOUNT}" \
+                --aws-account-id "${QS_ACCOUNT}" \
                 --folder-id "${FOLDER_ID}" \
                 --member-id "${analysis_id}" \
                 --member-type ANALYSIS \
@@ -483,7 +536,7 @@ if ! $REFRESH_ONLY; then
         analysis_id=$(python3 -c "import json,sys; d=json.load(open('${def_file}')); print(d['AnalysisId'])")
         analysis_name=$(python3 -c "import json,sys; d=json.load(open('${def_file}')); print(d['Name'])")
         if aws quicksight create-folder-membership \
-                --aws-account-id "${ACCOUNT}" \
+                --aws-account-id "${QS_ACCOUNT}" \
                 --folder-id "${FOLDER_ID}" \
                 --member-id "${analysis_id}" \
                 --member-type ANALYSIS \
@@ -512,12 +565,12 @@ if ! $REFRESH_ONLY; then
         fi
 
         if aws quicksight describe-dashboard \
-                --aws-account-id "${ACCOUNT}" \
+                --aws-account-id "${QS_ACCOUNT}" \
                 --dashboard-id "${dashboard_id}" \
                 --region "${REGION}" > /dev/null 2>&1; then
 
             aws quicksight update-dashboard \
-                --aws-account-id "${ACCOUNT}" \
+                --aws-account-id "${QS_ACCOUNT}" \
                 --dashboard-id "${dashboard_id}" \
                 --name "${dashboard_name}" \
                 --definition "${definition}" \
@@ -525,7 +578,7 @@ if ! $REFRESH_ONLY; then
             ok "Updated dashboard: ${dashboard_name}"
         else
             aws quicksight create-dashboard \
-                --aws-account-id "${ACCOUNT}" \
+                --aws-account-id "${QS_ACCOUNT}" \
                 --dashboard-id "${dashboard_id}" \
                 --name "${dashboard_name}" \
                 --definition "${definition}" \
@@ -536,7 +589,7 @@ if ! $REFRESH_ONLY; then
 
         # Add to shared folder (idempotent — suppress AlreadyExists)
         if aws quicksight create-folder-membership \
-                --aws-account-id "${ACCOUNT}" \
+                --aws-account-id "${QS_ACCOUNT}" \
                 --folder-id "${FOLDER_ID}" \
                 --member-id "${dashboard_id}" \
                 --member-type DASHBOARD \

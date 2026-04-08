@@ -123,6 +123,65 @@ run_sql_file() {
 SQL_DIR="${SCRIPT_DIR}/../redshift"
 
 # =============================================================
+# STEP 0 — Redshift Serverless namespace + workgroup
+# =============================================================
+# On a fresh AWS account these must be created before the Data API
+# can accept connections. Both operations are idempotent.
+# =============================================================
+if ! $VIEWS_ONLY; then
+    log "=== [0] Redshift Serverless namespace + workgroup ==="
+
+    if $DRY_RUN; then
+        warn "DRY-RUN: would create namespace '${RS_NAMESPACE}' and workgroup '${RS_WORKGROUP}' if absent"
+    else
+        NS_STATUS=$(aws redshift-serverless get-namespace \
+            --namespace-name "${RS_NAMESPACE}" \
+            --region "${REGION}" \
+            --query 'namespace.status' --output text 2>/dev/null || echo "NOT_FOUND")
+
+        if [[ "${NS_STATUS}" == "NOT_FOUND" ]]; then
+            log "  Creating namespace: ${RS_NAMESPACE}"
+            aws redshift-serverless create-namespace \
+                --namespace-name "${RS_NAMESPACE}" \
+                --db-name "${RS_DATABASE}" \
+                --iam-roles "${REDSHIFT_COPY_ROLE}" \
+                --region "${REGION}" > /dev/null
+            ok "Created namespace: ${RS_NAMESPACE}"
+        else
+            ok "Namespace exists: ${RS_NAMESPACE} (${NS_STATUS})"
+        fi
+
+        WG_STATUS=$(aws redshift-serverless get-workgroup \
+            --workgroup-name "${RS_WORKGROUP}" \
+            --region "${REGION}" \
+            --query 'workgroup.status' --output text 2>/dev/null || echo "NOT_FOUND")
+
+        if [[ "${WG_STATUS}" == "NOT_FOUND" ]]; then
+            log "  Creating workgroup: ${RS_WORKGROUP} (this takes ~5 minutes — waiting...)"
+            aws redshift-serverless create-workgroup \
+                --workgroup-name "${RS_WORKGROUP}" \
+                --namespace-name "${RS_NAMESPACE}" \
+                --base-capacity 8 \
+                --publicly-accessible false \
+                --region "${REGION}" > /dev/null
+            # Wait for workgroup to become AVAILABLE before proceeding
+            for i in $(seq 1 60); do
+                sleep 10
+                WG_STATUS=$(aws redshift-serverless get-workgroup \
+                    --workgroup-name "${RS_WORKGROUP}" \
+                    --region "${REGION}" \
+                    --query 'workgroup.status' --output text 2>/dev/null || echo "UNKNOWN")
+                [[ "${WG_STATUS}" == "AVAILABLE" ]] && break
+                log "  Waiting for workgroup... (${WG_STATUS}, ${i}/60)"
+            done
+            ok "Created workgroup: ${RS_WORKGROUP}"
+        else
+            ok "Workgroup exists: ${RS_WORKGROUP} (${WG_STATUS})"
+        fi
+    fi
+fi
+
+# =============================================================
 # STEP 1 — Schemas
 # =============================================================
 if ! $VIEWS_ONLY; then
@@ -153,6 +212,20 @@ fi
 if ! $VIEWS_ONLY; then
     log "=== [4] Fact tables ==="
     run_sql_file "${SQL_DIR}/ddl/fact_tables.sql" "Fact tables DDL" "--warn-on-fail"
+fi
+
+# =============================================================
+# STEP 4b — DW schema snapshot (safety net for fresh deploys)
+# =============================================================
+# dw_tables.sql is an extracted snapshot of all dw-schema tables.
+# Running it after the canonical DDL files ensures any table that
+# exists in the live schema but is missing from dim/fact files
+# gets created on a fresh deployment. All statements use IF NOT
+# EXISTS so this is safe to run repeatedly.
+# =============================================================
+if ! $VIEWS_ONLY; then
+    log "=== [4b] DW schema snapshot ==="
+    run_sql_file "${SQL_DIR}/ddl/dw_tables.sql" "DW schema snapshot" "--warn-on-fail"
 fi
 
 # =============================================================

@@ -489,8 +489,8 @@ run "aws iam put-role-policy \
                     \"Effect\": \"Allow\",
                     \"Action\": [\"sns:Publish\"],
                     \"Resource\": [
-                        \"arn:aws:sns:${REGION}:${ACCOUNT}:transit-failure-alerts\",
-                        \"arn:aws:sns:${REGION}:${ACCOUNT}:transit-daily-digest\"
+                        \"${FAILURE_SNS_ARN}\",
+                        \"${DIGEST_SNS_ARN}\"
                     ]
                 },
                 {
@@ -509,6 +509,68 @@ run "aws iam tag-role \
         --tags Key=Project,Value=seattle-transit-dw Key=ManagedBy,Value=deploy-script > /dev/null" \
     "TAG: ${PIPELINE_NOTIF_ROLE}"
 ok "Tagged: ${PIPELINE_NOTIF_ROLE}"
+
+# =============================================================
+# transit-failure-notifier-role
+# =============================================================
+log "=== transit-failure-notifier-role ==="
+
+NOTIFIER_ROLE="${FAILURE_NOTIFIER_LAMBDA}-role"
+NOTIFIER_ROLE_ARN="arn:aws:iam::${ACCOUNT}:role/${NOTIFIER_ROLE}"
+
+if role_exists "${NOTIFIER_ROLE}"; then
+    run "aws iam update-assume-role-policy \
+            --role-name ${NOTIFIER_ROLE} \
+            --policy-document '${LAMBDA_TRUST}' > /dev/null" \
+        "UPDATE trust policy: ${NOTIFIER_ROLE}"
+    ok "Trust policy updated: ${NOTIFIER_ROLE}"
+else
+    run "aws iam create-role \
+            --role-name ${NOTIFIER_ROLE} \
+            --assume-role-policy-document '${LAMBDA_TRUST}' \
+            --region '${REGION}' > /dev/null" \
+        "CREATE role: ${NOTIFIER_ROLE}"
+    ok "Created role: ${NOTIFIER_ROLE}"
+fi
+
+run "aws iam put-role-policy \
+        --role-name ${NOTIFIER_ROLE} \
+        --policy-name ${NOTIFIER_ROLE}-policy \
+        --policy-document '{
+            \"Version\": \"2012-10-17\",
+            \"Statement\": [
+                {
+                    \"Sid\": \"SNSPublish\",
+                    \"Effect\": \"Allow\",
+                    \"Action\": \"sns:Publish\",
+                    \"Resource\": \"${FAILURE_SNS_ARN}\"
+                },
+                {
+                    \"Sid\": \"GlueGetJobRun\",
+                    \"Effect\": \"Allow\",
+                    \"Action\": \"glue:GetJobRun\",
+                    \"Resource\": \"*\"
+                },
+                {
+                    \"Sid\": \"CloudWatchLogs\",
+                    \"Effect\": \"Allow\",
+                    \"Action\": [
+                        \"logs:CreateLogGroup\",
+                        \"logs:CreateLogStream\",
+                        \"logs:PutLogEvents\"
+                    ],
+                    \"Resource\": \"arn:aws:logs:${REGION}:${ACCOUNT}:*\"
+                }
+            ]
+        }' > /dev/null" \
+    "UPSERT inline policy: ${NOTIFIER_ROLE}-policy"
+ok "Upserted: ${NOTIFIER_ROLE}-policy"
+
+run "aws iam tag-role \
+        --role-name ${NOTIFIER_ROLE} \
+        --tags Key=Project,Value=seattle-transit-dw Key=ManagedBy,Value=deploy-script > /dev/null" \
+    "TAG: ${NOTIFIER_ROLE}"
+ok "Tagged: ${NOTIFIER_ROLE}"
 
 log "=== IAM deploy complete ==="
 if [[ $DRY_RUN == true ]]; then warn "DRY-RUN — no changes applied"; fi

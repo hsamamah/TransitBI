@@ -351,6 +351,45 @@ for deprecated_job in "gtfs-static-ingestion-v2" "gtfs-static-redshift-load-v2";
 done
 
 # =============================================================
+# STEP 3b — Glue Crawler
+# =============================================================
+# gtfs-static-crawler catalogs the GTFS static combined output
+# in S3 into the 'seattle_transit_staging' Data Catalog database.
+# It is triggered by the start-crawler trigger after ingestion.
+# =============================================================
+log "=== [3b] Glue crawler ==="
+
+CRAWLER_NAME="gtfs-static-crawler"
+CRAWLER_DB="seattle_transit_staging"
+CRAWLER_TARGET="s3://${S3_STAGING}/gtfs-static/combined/"
+
+glue_crawler_exists() {
+    aws glue get-crawler --name "$1" --region "${REGION}" > /dev/null 2>&1
+}
+
+if glue_crawler_exists "${CRAWLER_NAME}"; then
+    run "aws glue update-crawler \
+            --name '${CRAWLER_NAME}' \
+            --role '${GLUE_ROLE}' \
+            --database-name '${CRAWLER_DB}' \
+            --targets '{\"S3Targets\": [{\"Path\": \"${CRAWLER_TARGET}\"}]}' \
+            --configuration '{\"Version\":1.0,\"CreatePartitionIndex\":true}' \
+            --region '${REGION}' > /dev/null" \
+        "UPDATE crawler: ${CRAWLER_NAME}"
+    ok "Updated crawler: ${CRAWLER_NAME}"
+else
+    run "aws glue create-crawler \
+            --name '${CRAWLER_NAME}' \
+            --role '${GLUE_ROLE}' \
+            --database-name '${CRAWLER_DB}' \
+            --targets '{\"S3Targets\": [{\"Path\": \"${CRAWLER_TARGET}\"}]}' \
+            --configuration '{\"Version\":1.0,\"CreatePartitionIndex\":true}' \
+            --region '${REGION}' > /dev/null" \
+        "CREATE crawler: ${CRAWLER_NAME}"
+    ok "Created crawler: ${CRAWLER_NAME}"
+fi
+
+# =============================================================
 # STEP 4 — Workflows
 # =============================================================
 log "=== [4] Upserting workflows ==="

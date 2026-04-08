@@ -163,6 +163,8 @@ if ! $VIEWS_ONLY; then
                 --namespace-name "${RS_NAMESPACE}" \
                 --base-capacity 8 \
                 --publicly-accessible false \
+                --security-group-ids "${QS_SECURITY_GROUP}" \
+                --subnet-ids ${QS_SUBNETS} \
                 --region "${REGION}" > /dev/null
             # Wait for workgroup to become AVAILABLE before proceeding
             for i in $(seq 1 60); do
@@ -174,6 +176,10 @@ if ! $VIEWS_ONLY; then
                 [[ "${WG_STATUS}" == "AVAILABLE" ]] && break
                 log "  Waiting for workgroup... (${WG_STATUS}, ${i}/60)"
             done
+            if [[ "${WG_STATUS}" != "AVAILABLE" ]]; then
+                echo "[ERROR] Workgroup '${RS_WORKGROUP}' did not become AVAILABLE after 10 minutes — aborting"
+                exit 1
+            fi
             ok "Created workgroup: ${RS_WORKGROUP}"
         else
             ok "Workgroup exists: ${RS_WORKGROUP} (${WG_STATUS})"

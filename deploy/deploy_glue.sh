@@ -367,6 +367,12 @@ glue_crawler_exists() {
     aws glue get-crawler --name "$1" --region "${REGION}" > /dev/null 2>&1
 }
 
+# Ensure the Data Catalog database exists — crawlers do not auto-create it
+run "aws glue create-database \
+        --database-input '{\"Name\": \"${CRAWLER_DB}\"}' \
+        --region '${REGION}' 2>/dev/null || true" \
+    "ENSURE database: ${CRAWLER_DB}"
+
 if glue_crawler_exists "${CRAWLER_NAME}"; then
     run "aws glue update-crawler \
             --name '${CRAWLER_NAME}' \

@@ -171,6 +171,10 @@ print(json.dumps(subnets))
             [[ "${STATUS}" == "AVAILABLE" ]] && break
             log "  Waiting for VPC connection... (${STATUS}, ${i}/30)"
         done
+        if [[ "${STATUS}" != "AVAILABLE" ]]; then
+            echo "[ERROR] VPC connection '${QS_VPC_CONNECTION_NAME}' did not become AVAILABLE after 5 minutes — aborting"
+            exit 1
+        fi
         ok "Created VPC connection: ${QS_VPC_CONNECTION_NAME} (${VPC_CONNECTION_ID})"
     else
         ok "VPC connection exists: ${QS_VPC_CONNECTION_NAME} (${VPC_CONNECTION_ID})"

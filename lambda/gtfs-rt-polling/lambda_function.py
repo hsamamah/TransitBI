@@ -8,6 +8,10 @@ Fixes applied vs. prior version:
   - HTTPS URL (was HTTP)
   - Minimum byte validation (>100 bytes) catches empty-header responses
   - API key read from environment variable OBA_API_KEY
+
+Metrics emitted to CloudWatch (namespace: TransitDW/GtfsRt):
+  FeedFetchSuccess — count of feeds successfully fetched and saved
+  FeedFetchFailure — count of feeds that failed (network error, empty, <100B)
 """
 
 import json
@@ -20,9 +24,10 @@ from urllib.error import URLError, HTTPError
 # ============================================================
 # Configuration — set as Lambda Environment Variables
 # ============================================================
-S3_BUCKET = os.environ.get('S3_BUCKET', 'seattle-transit-raw')
-API_KEY   = os.environ.get('OBA_API_KEY', '')          # never use TEST in prod
-REGION    = os.environ.get('AWS_REGION', 'us-west-2')
+S3_BUCKET  = os.environ.get('S3_BUCKET', 'seattle-transit-raw')
+API_KEY    = os.environ.get('OBA_API_KEY', '')          # never use TEST in prod
+REGION     = os.environ.get('AWS_REGION', 'us-west-2')
+CW_NS      = 'TransitDW/GtfsRt'
 
 if not API_KEY:
     raise RuntimeError("OBA_API_KEY environment variable is not set")
@@ -43,6 +48,7 @@ FEEDS = {
 MIN_VALID_BYTES = 100   # a protobuf with only a header is ~20 bytes; real feeds are >> 100
 
 s3 = boto3.client('s3', region_name=REGION)
+cw = boto3.client('cloudwatch', region_name=REGION)
 
 
 # ============================================================
@@ -75,8 +81,31 @@ def save_to_s3(raw_bytes, agency, feed_type, now_utc):
     return key
 
 
+def emit_metrics(ok, fail):
+    """Emit FeedFetchSuccess and FeedFetchFailure counts to CloudWatch."""
+    try:
+        cw.put_metric_data(
+            Namespace=CW_NS,
+            MetricData=[
+                {
+                    'MetricName': 'FeedFetchSuccess',
+                    'Value': ok,
+                    'Unit': 'Count',
+                },
+                {
+                    'MetricName': 'FeedFetchFailure',
+                    'Value': fail,
+                    'Unit': 'Count',
+                },
+            ],
+        )
+    except Exception as e:
+        # Never let metric emission crash the Lambda
+        print(f"WARN: CloudWatch metric emit failed: {e}")
+
+
 def fetch_all(now_utc):
-    """Fetch all 4 feeds once and save to S3. Returns (ok, fail) counts."""
+    """Fetch all 4 feeds once and save to S3. Returns (ok, fail, feed_results)."""
     ok = fail = 0
     feed_results = []
 
@@ -112,6 +141,8 @@ def lambda_handler(event, context):
     print(f"--- Fetch {now_utc.strftime('%H:%M:%S')} UTC ---")
     ok, fail, feed_results = fetch_all(now_utc)
     print(f"Done: {ok} ok, {fail} fail")
+
+    emit_metrics(ok, fail)
 
     return {
         'statusCode': 200,

@@ -522,19 +522,32 @@ def main():
     write_job_params(workflow_run_id, JOB_FACTTRIP, facttrip_params)
 
     # ── Step 4: FactServiceDay gap analysis ──────────────────
-    # The FSD gap query checks current FactTrip OPERATED rows.
-    # Since the facttrip job hasn't run yet this workflow cycle,
-    # we also include dates from facttrip_params['gap_dates'] —
-    # these are dates that will have OPERATED rows after facttrip runs.
-    # Without this, FSD would miss newly-added dates on the first run.
-    all_facttrip_dates = set(vp_dates)
-    if facttrip_params.get('skip') == 'false':
-        all_facttrip_dates.update(
-            json.loads(facttrip_params.get('gap_dates', '[]'))
-        )
+    # FSD gaps come from two sources:
+    #
+    #   A) Dates that FactTrip WILL process this run (facttrip gap_dates).
+    #      These don't yet have OPERATED rows so the SQL query can't find
+    #      them — include them directly without querying FactTrip.
+    #
+    #   B) Historical dates that already have OPERATED rows in FactTrip
+    #      but are missing a FactServiceDay row (caught by the SQL query).
+    #      Only query dates NOT already covered by source A.
+    #
+    # Combining both ensures FSD runs for every date FactTrip touches.
+
+    facttrip_gap_dates = (
+        set(json.loads(facttrip_params.get('gap_dates', '[]')))
+        if facttrip_params.get('skip') == 'false'
+        else set()
+    )
+
+    # Historical backfill: OPERATED dates not already in facttrip_gap_dates
+    historical_dates = set(vp_dates) - facttrip_gap_dates
 
     print(f"\n[4] FactServiceDay gap analysis")
-    fsd_gaps   = get_factserviceday_gaps(all_facttrip_dates)
+    historical_fsd_gaps = get_factserviceday_gaps(historical_dates)
+    fsd_gaps = sorted(set(historical_fsd_gaps) | facttrip_gap_dates)
+    print(f"  Combined FSD gaps (historical + facttrip): {fsd_gaps}")
+
     fsd_params = determine_job_params(
         {'missing_skeleton': fsd_gaps, 'needs_merge': []},
         JOB_FACTSERVICEDAY

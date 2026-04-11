@@ -157,15 +157,17 @@ def write_csv_to_staging(records, fields, agency, date_str, file_name):
     year, month, day = date_str.split('-')
     s3_key = f"gtfs-rt/{agency}/{year}/{month}/{day}/{file_name}"
 
-    output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=fields, extrasaction='ignore')
+    buf = io.BytesIO()
+    wrapper = io.TextIOWrapper(buf, encoding='utf-8', newline='')
+    writer = csv.DictWriter(wrapper, fieldnames=fields, extrasaction='ignore')
     writer.writeheader()
     writer.writerows(records)
+    wrapper.flush()
 
     s3.put_object(
         Bucket=STAGING_BUCKET,
         Key=s3_key,
-        Body=output.getvalue().encode('utf-8'),
+        Body=buf.getvalue(),
         ContentType='text/csv',
     )
     print(f"  WROTE: s3://{STAGING_BUCKET}/{s3_key} ({len(records)} records)")
@@ -228,6 +230,7 @@ def extract_trip_updates(feed, agency_key):
                 'departure_time_local':  dep_time_local,
                 'feed_timestamp_utc':    feed_ts_str,
                 'arrival_source':        'GTFS_RT_REPORTED' if has_arrival else 'FALLBACK_SCHEDULED',
+                '_feed_ts':              feed_ts,
             })
 
     return records
@@ -250,11 +253,13 @@ def extract_vehicle_positions(feed, agency_key):
             ts_utc_str   = dt_utc.strftime('%Y-%m-%d %H:%M:%S')
             ts_local_str = dt_utc.astimezone(LOCAL_TZ).strftime('%Y-%m-%d %H:%M:%S')
 
+        has_trip    = v.HasField('trip')
+        has_vehicle = v.HasField('vehicle')
         record = {
             'agency_key':            agency_key,
-            'trip_id':               v.trip.trip_id   if v.HasField('trip')    else '',
-            'route_id':              v.trip.route_id  if v.HasField('trip')    else '',
-            'vehicle_id':            v.vehicle.id     if v.HasField('vehicle') else '',
+            'trip_id':               v.trip.trip_id   if has_trip    else '',
+            'route_id':              v.trip.route_id  if has_trip    else '',
+            'vehicle_id':            v.vehicle.id     if has_vehicle else '',
             'latitude':              v.position.latitude,
             'longitude':             v.position.longitude,
             'current_stop_sequence': v.current_stop_sequence
@@ -264,6 +269,7 @@ def extract_vehicle_positions(feed, agency_key):
             'timestamp_local':       ts_local_str,
             'feed_timestamp_utc':    feed_dt_utc.strftime('%Y-%m-%d %H:%M:%S'),
         }
+        record['_feed_ts'] = feed_ts
         records.append(record)
 
     return records
@@ -283,68 +289,99 @@ def deduplicate_latest(records, key_fields, sort_field):
 # ============================================================
 # 6. Redshift Data API — execute + poll
 # ============================================================
-def run_redshift_sql(sql, description=''):
+def submit_redshift_sql(sql, description=''):
     """
-    Submit SQL to Redshift Serverless via Data API and poll until complete.
-    Raises RuntimeError on failure or timeout.
+    Submit SQL to Redshift Serverless via Data API without blocking.
+    Returns (query_id, description).
     """
-    print(f"  REDSHIFT: {description or sql[:80]}")
+    print(f"  REDSHIFT SUBMIT: {description or sql[:80]}")
     resp = rs_data.execute_statement(
         WorkgroupName=WORKGROUP,
         Database=DATABASE,
         Sql=sql,
         WithEvent=True,
     )
-    query_id = resp['Id']
+    return resp['Id'], description
 
+
+def wait_for_statements(id_description_pairs):
+    """
+    Poll a list of (query_id, description) pairs concurrently until all finish.
+    Raises RuntimeError on any failure, abort, or timeout.
+    """
+    pending = dict(id_description_pairs)  # query_id -> description
     elapsed = 0
-    while elapsed < REDSHIFT_POLL_TIMEOUT:
+    while pending and elapsed < REDSHIFT_POLL_TIMEOUT:
         time.sleep(REDSHIFT_POLL_INTERVAL)
         elapsed += REDSHIFT_POLL_INTERVAL
-        status_resp = rs_data.describe_statement(Id=query_id)
-        status = status_resp['Status']
+        for query_id in list(pending):
+            status_resp = rs_data.describe_statement(Id=query_id)
+            status = status_resp['Status']
+            description = pending[query_id]
+            if status == 'FINISHED':
+                print(f"  OK: {description} completed in {elapsed}s")
+                del pending[query_id]
+            elif status in ('FAILED', 'ABORTED'):
+                err = status_resp.get('Error', 'No error detail')
+                raise RuntimeError(f"Redshift SQL failed [{description}]: {err}")
+            # PICKED / STARTED / SUBMITTED — keep waiting
+    if pending:
+        raise RuntimeError(
+            f"Redshift SQL timed out after {REDSHIFT_POLL_TIMEOUT}s: "
+            + ', '.join(pending.values()))
 
-        if status == 'FINISHED':
-            print(f"  OK: {description} completed in {elapsed}s")
-            return
-        elif status in ('FAILED', 'ABORTED'):
-            err = status_resp.get('Error', 'No error detail')
-            raise RuntimeError(f"Redshift SQL failed [{description}]: {err}")
-        # PICKED / STARTED / SUBMITTED — keep waiting
 
-    raise RuntimeError(
-        f"Redshift SQL timed out after {REDSHIFT_POLL_TIMEOUT}s [{description}]")
+def run_redshift_sql(sql, description=''):
+    """Submit a single SQL statement and block until complete."""
+    qid, desc = submit_redshift_sql(sql, description)
+    wait_for_statements([(qid, desc)])
 
 
-def copy_to_redshift(s3_uri, table, date_str, truncate_first=False):
+def copy_to_redshift_parallel(copy_specs):
     """
-    COPY a single CSV from S3 into a Redshift staging table.
-    Optionally truncates the table partition for the date first to allow reruns.
+    Execute DELETE + COPY for multiple (s3_uri, table, date_str) specs in parallel.
+
+    Phase 1: submit all DELETE statements concurrently, wait for all to finish.
+    Phase 2: submit all COPY  statements concurrently, wait for all to finish.
+
+    copy_specs: list of dicts with keys: s3_uri, table, date_str, truncate_first
     """
-    if truncate_first:
+    # Phase 1 — parallel DELETEs
+    delete_pairs = []
+    for spec in copy_specs:
+        if not spec.get('truncate_first'):
+            continue
+        table    = spec['table']
+        date_str = spec['date_str']
         if 'vehicle_positions' in table:
-            run_redshift_sql(
-                f"DELETE FROM {table} WHERE DATE(timestamp_local) = '{date_str}';",
-                description=f"Delete {date_str} from {table}",
-            )
+            sql = f"DELETE FROM {table} WHERE DATE(timestamp_local) = '{date_str}';"
         else:
-            run_redshift_sql(
-                f"DELETE FROM {table} WHERE service_date = '{date_str}';",
-                description=f"Delete {date_str} from {table}",
-            )
+            sql = f"DELETE FROM {table} WHERE service_date = '{date_str}';"
+        delete_pairs.append(submit_redshift_sql(sql, description=f"Delete {date_str} from {table}"))
 
-    copy_sql = f"""
-        COPY {table}
-        FROM '{s3_uri}'
-        IAM_ROLE '{IAM_ROLE}'
-        CSV
-        IGNOREHEADER 1
-        TIMEFORMAT 'auto'
-        BLANKSASNULL
-        EMPTYASNULL
-        REGION '{REGION}';
-    """
-    run_redshift_sql(copy_sql, description=f"COPY {s3_uri} → {table}")
+    if delete_pairs:
+        wait_for_statements(delete_pairs)
+
+    # Phase 2 — parallel COPYs
+    copy_pairs = []
+    for spec in copy_specs:
+        s3_uri = spec['s3_uri']
+        table  = spec['table']
+        copy_sql = f"""
+            COPY {table}
+            FROM '{s3_uri}'
+            IAM_ROLE '{IAM_ROLE}'
+            CSV
+            IGNOREHEADER 1
+            TIMEFORMAT 'auto'
+            BLANKSASNULL
+            EMPTYASNULL
+            REGION '{REGION}';
+        """
+        copy_pairs.append(submit_redshift_sql(copy_sql, description=f"COPY {s3_uri} → {table}"))
+
+    if copy_pairs:
+        wait_for_statements(copy_pairs)
 
 # ============================================================
 # 7. Field Definitions (must match stg table column order)
@@ -390,7 +427,7 @@ def main():
                 key = (record['trip_id'], record['stop_id'],
                        record['stop_sequence'], record['service_date'])
                 existing = tu_unique.get(key)
-                if existing is None or record['feed_timestamp_utc'] > existing['feed_timestamp_utc']:
+                if existing is None or record['_feed_ts'] > existing['_feed_ts']:
                     tu_unique[key] = record
         tu_records = list(tu_unique.values())
         print(f"  Trip updates after dedup: {len(tu_records)}")
@@ -409,7 +446,7 @@ def main():
             for record in extract_vehicle_positions(feed, agency_key):
                 key = (record['vehicle_id'], record['timestamp_utc'])
                 existing = vp_unique.get(key)
-                if existing is None or record['feed_timestamp_utc'] > existing['feed_timestamp_utc']:
+                if existing is None or record['_feed_ts'] > existing['_feed_ts']:
                     vp_unique[key] = record
         vp_records = list(vp_unique.values())
         print(f"  Vehicle positions after dedup: {len(vp_records)}")
@@ -419,24 +456,19 @@ def main():
         if uri:
             all_vp_s3_uris.append(uri)
 
-    # ── COPY to Redshift ──────────────────────────────────────────
+    # ── COPY to Redshift (parallel DELETE then parallel COPY) ─────
     print(f"\n--- Redshift COPY ---")
 
-    for uri in all_tu_s3_uris:
-        copy_to_redshift(
-            uri,
-            table='stg.rt_stop_time_updates',
-            date_str=target_date,
-            truncate_first=True,   # safe reruns
-        )
-
-    for uri in all_vp_s3_uris:
-        copy_to_redshift(
-            uri,
-            table='stg.rt_vehicle_positions',
-            date_str=target_date,
-            truncate_first=True,
-        )
+    copy_specs = [
+        {'s3_uri': uri, 'table': 'stg.rt_stop_time_updates',
+         'date_str': target_date, 'truncate_first': True}
+        for uri in all_tu_s3_uris
+    ] + [
+        {'s3_uri': uri, 'table': 'stg.rt_vehicle_positions',
+         'date_str': target_date, 'truncate_first': True}
+        for uri in all_vp_s3_uris
+    ]
+    copy_to_redshift_parallel(copy_specs)
 
     # ── Populate FactTrip ActualStartTime / ActualEndTime ─────────
     print(f"\n--- FactTrip ActualStartTime/EndTime Update ---")

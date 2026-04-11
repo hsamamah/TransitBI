@@ -641,11 +641,12 @@ def rt_merge_update_sql(target_date: str, force: bool = False) -> str:
                             / {PING_INTERVAL_SECONDS},
         rtcoveragerate    = CASE
                                 WHEN DATEDIFF(second, vp.first_ping, vp.last_ping) > 0
-                                THEN CAST(vp.ping_count AS NUMERIC) /
-                                     NULLIF(
-                                         DATEDIFF(second, vp.first_ping, vp.last_ping)
-                                         / {PING_INTERVAL_SECONDS},
-                                     0)
+                                THEN LEAST(1.0,
+                                         CAST(vp.ping_count AS NUMERIC) /
+                                         NULLIF(
+                                             DATEDIFF(second, vp.first_ping, vp.last_ping)
+                                             / {PING_INTERVAL_SECONDS},
+                                         0))
                                 ELSE NULL
                             END,
         -- ReportedVRM stays as ScheduledVRM — actual VRM requires shape
@@ -767,11 +768,12 @@ def added_trips_insert_sql(target_date: str) -> str:
             / {PING_INTERVAL_SECONDS}                                  AS expectedpingcount,
         CASE
             WHEN DATEDIFF(second, at.first_ping, at.last_ping) > 0
-            THEN CAST(at.ping_count AS NUMERIC) /
-                 NULLIF(
-                     DATEDIFF(second, at.first_ping, at.last_ping)
-                     / {PING_INTERVAL_SECONDS},
-                 0)
+            THEN LEAST(1.0,
+                     CAST(at.ping_count AS NUMERIC) /
+                     NULLIF(
+                         DATEDIFF(second, at.first_ping, at.last_ping)
+                         / {PING_INTERVAL_SECONDS},
+                     0))
             ELSE NULL
         END                                                            AS rtcoveragerate,
         0                                                              AS scheduledvrm,

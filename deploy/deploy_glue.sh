@@ -323,7 +323,8 @@ upsert_glue_job \
     "facttrip-skeleton-and-merge-load" \
     "${SCRIPTS}/facttrip_skeleton_and_merge_v2.py" \
     2 20 \
-    "${PARAM_READER}, \"--phase\": \"both\", \"--force\": \"false\""
+    "${PARAM_READER}, \"--phase\": \"both\", \"--force\": \"false\"" \
+    3
 
 upsert_glue_job \
     "factserviceday-load" \

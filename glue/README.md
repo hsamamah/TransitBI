@@ -39,17 +39,17 @@ gtfs-rt-daily-start (SCHEDULED)
 
 All jobs run on **Glue 4.0**, worker type **G.1X**.
 
-| Glue Job Name | Script | Workers | Timeout | Pipeline |
-|---|---|---|---|---|
-| `gtfs-static-ingestion` | `gtfs_static_ingestion.py` | 2 | 60 min | static |
-| `gtfs-static-validation` | `gtfs_static_validation.py` | 2 | 60 min | static |
-| `gtfs-static-redshift-load` | `gtfs_static_redshift_load.py` | 2 | 60 min | static |
-| `gtfs-static-crawler` | *(Glue Crawler)* | — | — | static |
-| `gtfs-rt-parse-load-glue` | `gtfs-rt-parse-load-glue.py` | 4 | 40 min | rt |
-| `transit-pipeline-inspector` | `transit_pipeline_inspector_v2.py` | 2 | 15 min | rt |
-| `factstop-skeleton-and-merge-load` | `factstop_skeleton_and_merge_v2.py` | 2 | 20 min | rt |
-| `facttrip-skeleton-and-merge-load` | `facttrip_skeleton_and_merge_v2.py` | 2 | 20 min | rt |
-| `factserviceday-load` | `factserviceday_load_v2.py` | 2 | 15 min | rt |
+| Glue Job Name | Script | Workers | Timeout | Pipeline | Notes |
+|---|---|---|---|---|---|
+| `gtfs-static-ingestion` | `gtfs_static_ingestion.py` | 2 | 60 min | static | |
+| `gtfs-static-validation` | `gtfs_static_validation.py` | 2 | 60 min | static | |
+| `gtfs-static-redshift-load` | `gtfs_static_redshift_load.py` | 2 | 60 min | static | |
+| `gtfs-static-crawler` | *(Glue Crawler)* | — | — | static | |
+| `gtfs-rt-parse-load-glue` | `gtfs-rt-parse-load-glue.py` | 4 | 40 min | rt | |
+| `transit-pipeline-inspector` | `transit_pipeline_inspector_v2.py` | 2 | 15 min | rt | |
+| `factstop-skeleton-and-merge-load` | `factstop_skeleton_and_merge_v2.py` | 2 | 20 min | rt | |
+| `facttrip-skeleton-and-merge-load` | `facttrip_skeleton_and_merge_v2.py` | 2 | 20 min | rt | MaxConcurrentRuns=3 |
+| `factserviceday-load` | `factserviceday_load_v2.py` | 2 | 15 min | rt | |
 
 > **Not in production:** `glue_rt_polling.py` — an older Glue-based RT poller, superseded by the Lambda function at `lambda/gtfs-rt-polling/`. The active poller is the Lambda, triggered by EventBridge every 1 minute. Both write to the same S3 key format (`gtfs-rt/{agency}/{feed_type}/{YYYY/MM/DD/HHmmss}.pb`) — running both simultaneously would cause duplicate writes.
 
@@ -77,10 +77,15 @@ Reads accumulated GTFS-RT `.pb` protobuf files from `s3://seattle-transit-raw/gt
 Key implementation details:
 - **Parallel S3 reads**: `ThreadPoolExecutor(16)` with per-thread boto3 clients (`threading.local()`) — boto3 clients are not thread-safe
 - **Generator-based**: `read_pb_files_parallel()` yields feeds one at a time so memory never holds all parsed protobufs simultaneously
-- **Incremental dedup**: builds a `dict[key → record]` as each feed arrives, eliminating the accumulate-all-then-deduplicate OOM pattern
+- **Incremental dedup**: builds a `dict[key → record]` as each feed arrives, eliminating the accumulate-all-then-deduplicate OOM pattern; compares raw integer `feed_ts` (not parsed datetime) for speed
+- **BytesIO staging writes**: `write_csv_to_staging()` uses `io.BytesIO` + `io.TextIOWrapper` instead of `StringIO` + encode, eliminating an intermediate string copy
+- **Cached `HasField` calls**: `extract_vehicle_positions()` caches `v.HasField('trip')` and `v.HasField('vehicle')` per record to avoid redundant protobuf reflection
+- **Parallel Redshift COPY**: `copy_to_redshift_parallel()` submits all DELETE statements concurrently, waits for all to finish, then submits all COPY statements concurrently — replacing 4 serial waits with 2 parallel rounds (~3× wall-time reduction in the Redshift phase)
 
 ### `transit_pipeline_inspector_v2.py`
 Sits between `gtfs-rt-parse-load-glue` and the fact jobs. Queries Redshift staging to find date gaps across FactStop, FactTrip, and FactServiceDay. Writes job parameters (dates, phase, force flag) to DynamoDB table `seattle-transit-pipeline` with a 7-day TTL. Downstream fact jobs read their own parameters on startup via `lib/pipeline_param_reader_v2.py`.
+
+**FSD gap detection (two-source approach):** `get_factserviceday_gaps()` queries `FactTrip WHERE tripstatus='OPERATED'` — but the inspector runs before FactTrip merge, so dates that only have MISSED rows are invisible to that query. The fix: gaps for dates that FactTrip *will* process (from `facttrip_params.gap_dates` in DynamoDB) are unioned directly into the FSD gap list without going through the OPERATED-row query. Only historical dates not covered by FactTrip are queried against Redshift.
 
 ### `factstop_skeleton_and_merge_v2.py`
 **Phase 1 (skeleton):** Explodes the GTFS static schedule into one `FactStop` row per stop visit per trip per service date. All actual columns NULL on insert. Idempotent.
@@ -91,6 +96,8 @@ Sits between `gtfs-rt-parse-load-glue` and the fact jobs. Queries Redshift stagi
 **Phase 1 (skeleton):** One `FactTrip` row per trip per service date, including cancelled trips. Computes `ScheduledVRM` from `stg.shapes` and `ScheduledVRH` from `stg.stop_times`.
 
 **Phase 2 (merge):** Derives `TripStatus` from `stg.rt_vehicle_positions` (ping presence + `calendar_dates`). Populates actual times, ping counts, `RTCoverageRate`, `ReportedVRH`, `IsEstimated`, `IsOfficial`. ADDED trips inserted separately.
+
+**RTCoverageRate overflow fix:** `RTCoverageRate` is stored as `NUMERIC(5,4)` (max 9.9999). Burst-pinging vehicles (e.g. 35 pings in 30 s) produced rates >9.9999, causing a numeric overflow error. Both `rt_merge_update_sql()` and `added_trips_insert_sql()` now wrap the rate in `LEAST(1.0, ...)` — semantically correct since coverage cannot exceed 100%.
 
 ### `factserviceday_load_v2.py`
 Aggregates `FactTrip` into one row per agency per service date: trip counts by status, `MissedTripRate` (NTD convention), VRM/VRH totals, and peak vehicle count (VOMS). DELETE + INSERT for idempotency.

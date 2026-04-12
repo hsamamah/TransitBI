@@ -1,0 +1,1142 @@
+{
+    "Name": "Missed Trip Rate by Route — Poojith",
+    "DashboardId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c",
+    "Definition": {
+        "DataSetIdentifierDeclarations": [
+            {
+                "Identifier": "v_missed_trip_rate_by_route",
+                "DataSetArn": "arn:aws:quicksight:us-west-2:805699509606:dataset/3eac6ed8-921c-4584-be0c-3a6a8c377027"
+            }
+        ],
+        "Sheets": [
+            {
+                "SheetId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_0b3b7aae-6663-4658-b314-2b5733be1620",
+                "Name": "Missed Trip Rate Analysis",
+                "FilterControls": [
+                    {
+                        "Dropdown": {
+                            "FilterControlId": "0404c895-e36b-4d12-a8f6-11dadf093303",
+                            "Title": "agencyname equals",
+                            "SourceFilterId": "a4dd29d2-2918-46c1-9991-ed26cf620ab5",
+                            "DisplayOptions": {
+                                "SelectAllOptions": {
+                                    "Visibility": "VISIBLE"
+                                }
+                            },
+                            "Type": "MULTI_SELECT"
+                        }
+                    }
+                ],
+                "Visuals": [
+                    {
+                        "KPIVisual": {
+                            "VisualId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_4d9dd361-7470-4b83-9963-75c54babe635",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Total Scheduled Trips</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "Values": [
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "v_missed_-total_sch-bd6769.0.1776033826328",
+                                                "Column": {
+                                                    "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                    "ColumnName": "total_scheduled_trips"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "SUM"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "TargetValues": [],
+                                    "TrendGroups": []
+                                },
+                                "SortConfiguration": {},
+                                "KPIOptions": {
+                                    "Comparison": {
+                                        "ComparisonMethod": "PERCENT_DIFFERENCE"
+                                    },
+                                    "PrimaryValueDisplayType": "ACTUAL",
+                                    "SecondaryValueFontConfiguration": {
+                                        "FontSize": {
+                                            "Relative": "EXTRA_LARGE"
+                                        }
+                                    },
+                                    "Sparkline": {
+                                        "Visibility": "VISIBLE",
+                                        "Type": "AREA"
+                                    },
+                                    "VisualLayoutOptions": {
+                                        "StandardLayout": {
+                                            "Type": "VERTICAL"
+                                        }
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "KPIVisual": {
+                            "VisualId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_f6091726-24e9-48fe-8143-73f4a88cc10a",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Overall Missed Trip Rate (%)</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "Values": [
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "v_missed_-total_sch-bd6769.0.1776033826328",
+                                                "Column": {
+                                                    "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                    "ColumnName": "total_scheduled_trips"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "AVERAGE"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "TargetValues": [],
+                                    "TrendGroups": []
+                                },
+                                "SortConfiguration": {},
+                                "KPIOptions": {
+                                    "Comparison": {
+                                        "ComparisonMethod": "PERCENT_DIFFERENCE"
+                                    },
+                                    "PrimaryValueDisplayType": "ACTUAL",
+                                    "SecondaryValueFontConfiguration": {
+                                        "FontSize": {
+                                            "Relative": "EXTRA_LARGE"
+                                        }
+                                    },
+                                    "Sparkline": {
+                                        "Visibility": "VISIBLE",
+                                        "Type": "AREA"
+                                    },
+                                    "VisualLayoutOptions": {
+                                        "StandardLayout": {
+                                            "Type": "VERTICAL"
+                                        }
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "BarChartVisual": {
+                            "VisualId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_77986c45-a754-4ce7-998e-5a2238a2bfb6",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Top 15 Routes by Missed Trip Rate (%)</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "BarChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "v_missed_-routeid-2fa63a.2.1774994933594",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                        "ColumnName": "routeshortname"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "v_missed_-missed_tr-72cc94.1.1774994921772",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                        "ColumnName": "missed_trip_rate_pct"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "AVERAGE"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": []
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "v_missed_-missed_tr-72cc94.1.1774994921772",
+                                                "Direction": "DESC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "ColorItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "SmallMultiplesLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "Orientation": "HORIZONTAL",
+                                "BarsArrangement": "CLUSTERED",
+                                "DataLabels": {
+                                    "Visibility": "HIDDEN",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "PRIMARY_VALUE",
+                                        "TooltipFields": [
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "v_missed_-missed_tr-72cc94.1.1774994921772",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "v_missed_-routeid-2fa63a.2.1774994933594",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "LineChartVisual": {
+                            "VisualId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_4d254a00-ee9d-47d7-884e-f6156a824036",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Missed Trip Rate Trend by Agency</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "LineChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "fe9e3824-8f31-4fdc-8950-63b1e18188ab.2.1776033630130",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                        "ColumnName": "month_name"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "v_missed_-missed_tr-093714.1.1776033224355",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                        "ColumnName": "missed_trip_rate_pct"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "AVERAGE"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "v_missed_-agencynam-5c4ccd.2.1776033302005",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                        "ColumnName": "agencyname"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "v_missed_-missed_tr-093714.1.1776033224355",
+                                                "Direction": "DESC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "ColorItemsLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "SmallMultiplesLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "Type": "LINE",
+                                "DataLabels": {
+                                    "Visibility": "HIDDEN",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "PRIMARY_VALUE",
+                                        "TooltipFields": [
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "v_missed_-missed_tr-093714.1.1776033224355",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "v_missed_-agencynam-5c4ccd.2.1776033302005",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "fe9e3824-8f31-4fdc-8950-63b1e18188ab.2.1776033630130",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "BarChartVisual": {
+                            "VisualId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_9b286d3b-e0d4-410f-86dc-b6cc29970a2e",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Missed Trip Rate by Agency</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "BarChartAggregatedFieldWells": {
+                                        "Category": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "v_missed_-agencynam-5c4ccd.0.1776033386070",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                        "ColumnName": "agencyname"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "v_missed_-missed_tr-093714.1.1776033397270",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                        "ColumnName": "missed_trip_rate_pct"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "AVERAGE"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Colors": []
+                                    }
+                                },
+                                "SortConfiguration": {
+                                    "CategorySort": [
+                                        {
+                                            "FieldSort": {
+                                                "FieldId": "v_missed_-missed_tr-093714.1.1776033397270",
+                                                "Direction": "DESC"
+                                            }
+                                        }
+                                    ],
+                                    "CategoryItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "ColorItemsLimit": {
+                                        "OtherCategories": "INCLUDE"
+                                    },
+                                    "SmallMultiplesLimitConfiguration": {
+                                        "OtherCategories": "INCLUDE"
+                                    }
+                                },
+                                "Orientation": "HORIZONTAL",
+                                "BarsArrangement": "CLUSTERED",
+                                "CategoryAxis": {
+                                    "ScrollbarOptions": {
+                                        "VisibleRange": {
+                                            "PercentRange": {
+                                                "From": 0.0,
+                                                "To": 90.9090909090909
+                                            }
+                                        }
+                                    }
+                                },
+                                "DataLabels": {
+                                    "Visibility": "HIDDEN",
+                                    "Overlap": "DISABLE_OVERLAP"
+                                },
+                                "Tooltip": {
+                                    "TooltipVisibility": "VISIBLE",
+                                    "SelectedTooltipType": "DETAILED",
+                                    "FieldBasedTooltip": {
+                                        "AggregationVisibility": "HIDDEN",
+                                        "TooltipTitleType": "PRIMARY_VALUE",
+                                        "TooltipFields": [
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "v_missed_-agencynam-5c4ccd.0.1776033386070",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            },
+                                            {
+                                                "FieldTooltipItem": {
+                                                    "FieldId": "v_missed_-missed_tr-093714.1.1776033397270",
+                                                    "Visibility": "VISIBLE"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "KPIVisual": {
+                            "VisualId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_1b081250-cb02-4d0b-a777-b7d52d60d96e",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Total Missed Trips</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "Values": [
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "v_missed_-missed_tr-92e2d3.0.1776033695808",
+                                                "Column": {
+                                                    "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                    "ColumnName": "missed_trips"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "SUM"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "TargetValues": [],
+                                    "TrendGroups": []
+                                },
+                                "SortConfiguration": {},
+                                "KPIOptions": {
+                                    "Comparison": {
+                                        "ComparisonMethod": "PERCENT_DIFFERENCE"
+                                    },
+                                    "PrimaryValueDisplayType": "ACTUAL",
+                                    "SecondaryValueFontConfiguration": {
+                                        "FontSize": {
+                                            "Relative": "EXTRA_LARGE"
+                                        }
+                                    },
+                                    "Sparkline": {
+                                        "Visibility": "VISIBLE",
+                                        "Type": "AREA"
+                                    },
+                                    "VisualLayoutOptions": {
+                                        "StandardLayout": {
+                                            "Type": "VERTICAL"
+                                        }
+                                    }
+                                }
+                            },
+                            "Actions": [],
+                            "ColumnHierarchies": []
+                        }
+                    },
+                    {
+                        "TableVisual": {
+                            "VisualId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_dbb7cc44-1147-470f-8869-f7ae6a51e599",
+                            "Title": {
+                                "Visibility": "VISIBLE",
+                                "FormatText": {
+                                    "RichText": "<visual-title>Service Reliability Summary by Agency</visual-title>"
+                                }
+                            },
+                            "Subtitle": {
+                                "Visibility": "VISIBLE"
+                            },
+                            "ChartConfiguration": {
+                                "FieldWells": {
+                                    "TableAggregatedFieldWells": {
+                                        "GroupBy": [
+                                            {
+                                                "CategoricalDimensionField": {
+                                                    "FieldId": "v_missed_-agencynam-5c4ccd.0.1776034760888",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                        "ColumnName": "agencyname"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "Values": [
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "v_missed_-total_sch-bd6769.1.1776034768283",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                        "ColumnName": "total_scheduled_trips"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "v_missed_-operated_-4e887a.2.1776034774900",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                        "ColumnName": "operated_trips"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "v_missed_-missed_tr-92e2d3.3.1776034779593",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                        "ColumnName": "missed_trips"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "v_missed_-cancelled-eb7428.4.1776034785955",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                        "ColumnName": "cancelled_trips"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "SUM"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "NumericalMeasureField": {
+                                                    "FieldId": "v_missed_-missed_tr-093714.5.1776034792884",
+                                                    "Column": {
+                                                        "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                                        "ColumnName": "missed_trip_rate_pct"
+                                                    },
+                                                    "AggregationFunction": {
+                                                        "SimpleNumericalAggregation": "AVERAGE"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                "SortConfiguration": {},
+                                "TableOptions": {
+                                    "HeaderStyle": {
+                                        "TextWrap": "WRAP",
+                                        "Height": 25
+                                    }
+                                },
+                                "FieldOptions": {
+                                    "SelectedFieldOptions": [
+                                        {
+                                            "FieldId": "v_missed_-agencynam-5c4ccd.0.1776034760888",
+                                            "Width": "160px"
+                                        }
+                                    ],
+                                    "Order": [
+                                        "v_missed_-agencynam-5c4ccd.0.1776034760888",
+                                        "v_missed_-total_sch-bd6769.1.1776034768283",
+                                        "v_missed_-operated_-4e887a.2.1776034774900",
+                                        "v_missed_-missed_tr-92e2d3.3.1776034779593",
+                                        "v_missed_-cancelled-eb7428.4.1776034785955",
+                                        "v_missed_-missed_tr-093714.5.1776034792884"
+                                    ]
+                                }
+                            },
+                            "Actions": []
+                        }
+                    }
+                ],
+                "Layouts": [
+                    {
+                        "Configuration": {
+                            "GridLayout": {
+                                "Elements": [
+                                    {
+                                        "ElementId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_1b081250-cb02-4d0b-a777-b7d52d60d96e",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 0,
+                                        "ColumnSpan": 11,
+                                        "RowIndex": 0,
+                                        "RowSpan": 4
+                                    },
+                                    {
+                                        "ElementId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_4d9dd361-7470-4b83-9963-75c54babe635",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 11,
+                                        "ColumnSpan": 12,
+                                        "RowIndex": 0,
+                                        "RowSpan": 4
+                                    },
+                                    {
+                                        "ElementId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_f6091726-24e9-48fe-8143-73f4a88cc10a",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 23,
+                                        "ColumnSpan": 13,
+                                        "RowIndex": 0,
+                                        "RowSpan": 4
+                                    },
+                                    {
+                                        "ElementId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_77986c45-a754-4ce7-998e-5a2238a2bfb6",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 0,
+                                        "ColumnSpan": 18,
+                                        "RowIndex": 4,
+                                        "RowSpan": 12
+                                    },
+                                    {
+                                        "ElementId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_4d254a00-ee9d-47d7-884e-f6156a824036",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 18,
+                                        "ColumnSpan": 18,
+                                        "RowIndex": 4,
+                                        "RowSpan": 12
+                                    },
+                                    {
+                                        "ElementId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_9b286d3b-e0d4-410f-86dc-b6cc29970a2e",
+                                        "ElementType": "VISUAL",
+                                        "ColumnIndex": 0,
+                                        "ColumnSpan": 18,
+                                        "RowIndex": 16,
+                                        "RowSpan": 12
+                                    },
+                                    {
+                                        "ElementId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_dbb7cc44-1147-470f-8869-f7ae6a51e599",
+                                        "ElementType": "VISUAL",
+                                        "ColumnSpan": 18,
+                                        "RowSpan": 12
+                                    }
+                                ],
+                                "CanvasSizeOptions": {
+                                    "ScreenCanvasSizeOptions": {
+                                        "ResizeOption": "FIXED",
+                                        "OptimizedViewPortWidth": "1600px"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "SheetControlLayouts": [
+                    {
+                        "Configuration": {
+                            "GridLayout": {
+                                "Elements": [
+                                    {
+                                        "ElementId": "0404c895-e36b-4d12-a8f6-11dadf093303",
+                                        "ElementType": "FILTER_CONTROL",
+                                        "ColumnSpan": 2,
+                                        "RowSpan": 1
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "ContentType": "INTERACTIVE"
+            }
+        ],
+        "CalculatedFields": [
+            {
+                "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                "Name": "month_name",
+                "Expression": "ifelse(\r\n  calendarmonth = 1, 'Jan',\r\n  calendarmonth = 2, 'Feb',\r\n  calendarmonth = 3, 'Mar',\r\n  calendarmonth = 4, 'Apr',\r\n  calendarmonth = 5, 'May',\r\n  calendarmonth = 6, 'Jun',\r\n  calendarmonth = 7, 'Jul',\r\n  calendarmonth = 8, 'Aug',\r\n  calendarmonth = 9, 'Sep',\r\n  calendarmonth = 10, 'Oct',\r\n  calendarmonth = 11, 'Nov',\r\n  calendarmonth = 12, 'Dec',\r\n  'Unknown'\r\n)"
+            }
+        ],
+        "ParameterDeclarations": [],
+        "FilterGroups": [
+            {
+                "FilterGroupId": "4eecc56e-0110-4c21-8137-0d372e843f1f",
+                "Filters": [
+                    {
+                        "TopBottomFilter": {
+                            "FilterId": "d2801d6f-556d-4b21-9de7-9b7e4e2022a3",
+                            "Column": {
+                                "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                "ColumnName": "routeshortname"
+                            },
+                            "Limit": 15,
+                            "AggregationSortConfigurations": [
+                                {
+                                    "Column": {
+                                        "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                        "ColumnName": "missed_trip_rate_pct"
+                                    },
+                                    "SortDirection": "DESC",
+                                    "AggregationFunction": {
+                                        "NumericalAggregationFunction": {
+                                            "SimpleNumericalAggregation": "SUM"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "ScopeConfiguration": {
+                    "SelectedSheets": {
+                        "SheetVisualScopingConfigurations": [
+                            {
+                                "SheetId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_0b3b7aae-6663-4658-b314-2b5733be1620",
+                                "Scope": "SELECTED_VISUALS",
+                                "VisualIds": [
+                                    "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_77986c45-a754-4ce7-998e-5a2238a2bfb6"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "Status": "ENABLED",
+                "CrossDataset": "SINGLE_DATASET"
+            },
+            {
+                "FilterGroupId": "7d37d62d-b42e-4618-a9e5-5d61f4a69d09",
+                "Filters": [
+                    {
+                        "CategoryFilter": {
+                            "FilterId": "2f005bbc-e772-4e9b-be4b-2161bef56ed5",
+                            "Column": {
+                                "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                "ColumnName": "routeshortname"
+                            },
+                            "Configuration": {
+                                "FilterListConfiguration": {
+                                    "MatchOperator": "CONTAINS",
+                                    "CategoryValues": [
+                                        "1",
+                                        "1 Line",
+                                        "10",
+                                        "100",
+                                        "101",
+                                        "102",
+                                        "103",
+                                        "104",
+                                        "105",
+                                        "106",
+                                        "107",
+                                        "108",
+                                        "109",
+                                        "11",
+                                        "111",
+                                        "112",
+                                        "113",
+                                        "114",
+                                        "117",
+                                        "118",
+                                        "119",
+                                        "12",
+                                        "120",
+                                        "121",
+                                        "124",
+                                        "125",
+                                        "128",
+                                        "13",
+                                        "130",
+                                        "131",
+                                        "132",
+                                        "14",
+                                        "148",
+                                        "150",
+                                        "153",
+                                        "156",
+                                        "16",
+                                        "160",
+                                        "161",
+                                        "162",
+                                        "165",
+                                        "166",
+                                        "168",
+                                        "17",
+                                        "177",
+                                        "18",
+                                        "181",
+                                        "182",
+                                        "183",
+                                        "184",
+                                        "185",
+                                        "186",
+                                        "187",
+                                        "19",
+                                        "193",
+                                        "2",
+                                        "2 Line",
+                                        "201",
+                                        "202",
+                                        "203",
+                                        "204",
+                                        "206",
+                                        "208",
+                                        "209",
+                                        "21",
+                                        "212",
+                                        "214",
+                                        "215",
+                                        "217",
+                                        "218",
+                                        "219",
+                                        "22",
+                                        "220",
+                                        "221",
+                                        "222",
+                                        "223",
+                                        "224",
+                                        "225",
+                                        "226",
+                                        "228",
+                                        "229",
+                                        "230",
+                                        "231",
+                                        "238",
+                                        "239",
+                                        "24",
+                                        "240",
+                                        "245",
+                                        "249",
+                                        "250",
+                                        "255",
+                                        "256",
+                                        "265",
+                                        "266",
+                                        "269",
+                                        "27",
+                                        "270",
+                                        "271",
+                                        "28",
+                                        "280",
+                                        "29",
+                                        "3",
+                                        "301",
+                                        "302",
+                                        "303",
+                                        "307",
+                                        "31",
+                                        "32",
+                                        "322",
+                                        "33",
+                                        "331",
+                                        "332",
+                                        "333",
+                                        "344",
+                                        "345",
+                                        "346",
+                                        "348",
+                                        "36",
+                                        "365",
+                                        "372",
+                                        "377",
+                                        "390",
+                                        "391",
+                                        "4",
+                                        "40",
+                                        "400",
+                                        "401",
+                                        "402",
+                                        "403",
+                                        "404",
+                                        "405",
+                                        "409",
+                                        "41",
+                                        "42",
+                                        "424",
+                                        "43",
+                                        "44",
+                                        "45",
+                                        "47",
+                                        "48",
+                                        "49",
+                                        "497",
+                                        "5",
+                                        "50",
+                                        "500",
+                                        "501",
+                                        "510",
+                                        "512",
+                                        "513",
+                                        "515",
+                                        "52",
+                                        "522",
+                                        "53",
+                                        "532",
+                                        "535",
+                                        "54",
+                                        "542",
+                                        "545",
+                                        "55",
+                                        "550",
+                                        "554",
+                                        "556",
+                                        "56",
+                                        "560",
+                                        "566",
+                                        "57",
+                                        "570",
+                                        "574",
+                                        "577",
+                                        "578",
+                                        "580",
+                                        "586",
+                                        "590",
+                                        "592",
+                                        "594",
+                                        "595",
+                                        "596",
+                                        "6",
+                                        "60",
+                                        "600",
+                                        "602",
+                                        "604",
+                                        "605",
+                                        "607",
+                                        "608",
+                                        "61",
+                                        "610",
+                                        "612",
+                                        "614",
+                                        "616",
+                                        "618",
+                                        "619",
+                                        "62",
+                                        "620",
+                                        "621",
+                                        "623",
+                                        "624",
+                                        "625",
+                                        "626",
+                                        "627",
+                                        "62A",
+                                        "62B",
+                                        "630",
+                                        "631",
+                                        "633",
+                                        "635",
+                                        "636",
+                                        "637",
+                                        "638",
+                                        "64",
+                                        "65",
+                                        "66",
+                                        "67",
+                                        "68",
+                                        "7",
+                                        "70",
+                                        "75",
+                                        "773",
+                                        "775",
+                                        "79",
+                                        "8",
+                                        "893",
+                                        "895",
+                                        "9",
+                                        "901",
+                                        "903",
+                                        "904",
+                                        "905",
+                                        "906",
+                                        "907",
+                                        "909",
+                                        "914",
+                                        "915",
+                                        "917",
+                                        "93",
+                                        "930",
+                                        "931",
+                                        "94",
+                                        "95",
+                                        "96",
+                                        "97",
+                                        "973",
+                                        "975",
+                                        "98",
+                                        "981",
+                                        "982",
+                                        "986",
+                                        "987",
+                                        "988",
+                                        "989",
+                                        "99",
+                                        "A Line",
+                                        "B Line",
+                                        "C Line",
+                                        "D Line",
+                                        "Duvall-Monroe Shuttle",
+                                        "E Line",
+                                        "F Line",
+                                        "First Hill Streetcar",
+                                        "G Line",
+                                        "H Line",
+                                        "Monorail",
+                                        "N Line",
+                                        "ONE",
+                                        "S Line",
+                                        "STCL",
+                                        "South Lake Union Streetcar",
+                                        "Swift Blue",
+                                        "Swift Green",
+                                        "Swift Orange",
+                                        "T Line",
+                                        "Unknown",
+                                        "Valley Shuttle"
+                                    ],
+                                    "NullOption": "NON_NULLS_ONLY"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "ScopeConfiguration": {
+                    "SelectedSheets": {
+                        "SheetVisualScopingConfigurations": [
+                            {
+                                "SheetId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_0b3b7aae-6663-4658-b314-2b5733be1620",
+                                "Scope": "SELECTED_VISUALS",
+                                "VisualIds": [
+                                    "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_77986c45-a754-4ce7-998e-5a2238a2bfb6"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "Status": "ENABLED",
+                "CrossDataset": "SINGLE_DATASET"
+            },
+            {
+                "FilterGroupId": "3c7f8efe-a75f-4502-ba64-0cd21f2fce9a",
+                "Filters": [
+                    {
+                        "CategoryFilter": {
+                            "FilterId": "a4dd29d2-2918-46c1-9991-ed26cf620ab5",
+                            "Column": {
+                                "DataSetIdentifier": "v_missed_trip_rate_by_route",
+                                "ColumnName": "agencyname"
+                            },
+                            "Configuration": {
+                                "FilterListConfiguration": {
+                                    "MatchOperator": "CONTAINS",
+                                    "SelectAllOptions": "FILTER_ALL_VALUES",
+                                    "NullOption": "NON_NULLS_ONLY"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "ScopeConfiguration": {
+                    "SelectedSheets": {
+                        "SheetVisualScopingConfigurations": [
+                            {
+                                "SheetId": "cfb8c1d1-5b6d-4c5c-9a1e-4820d77a927c_0b3b7aae-6663-4658-b314-2b5733be1620",
+                                "Scope": "ALL_VISUALS"
+                            }
+                        ]
+                    }
+                },
+                "Status": "ENABLED",
+                "CrossDataset": "SINGLE_DATASET"
+            }
+        ],
+        "AnalysisDefaults": {
+            "DefaultNewSheetConfiguration": {
+                "InteractiveLayoutConfiguration": {
+                    "Grid": {
+                        "CanvasSizeOptions": {
+                            "ScreenCanvasSizeOptions": {
+                                "ResizeOption": "FIXED",
+                                "OptimizedViewPortWidth": "1600px"
+                            }
+                        }
+                    }
+                },
+                "SheetContentType": "INTERACTIVE"
+            }
+        },
+        "Options": {
+            "WeekStart": "SUNDAY",
+            "QBusinessInsightsStatus": "DISABLED",
+            "ExcludedDataSetArns": [],
+            "CustomActionDefaults": {
+                "highlightOperation": {
+                    "Trigger": "DATA_POINT_CLICK"
+                }
+            }
+        }
+    }
+}

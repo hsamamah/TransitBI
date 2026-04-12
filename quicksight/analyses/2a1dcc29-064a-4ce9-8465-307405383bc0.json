@@ -78,7 +78,8 @@
                                     },
                                     "Sparkline": {
                                         "Visibility": "VISIBLE",
-                                        "Type": "AREA"
+                                        "Type": "AREA",
+                                        "TooltipVisibility": "HIDDEN"
                                     },
                                     "VisualLayoutOptions": {
                                         "StandardLayout": {
@@ -202,7 +203,8 @@
                             "ColumnHierarchies": [
                                 {
                                     "DateTimeHierarchy": {
-                                        "HierarchyId": "vw_dailyv-fulldate-63f0b5.2.1775547733769"
+                                        "HierarchyId": "vw_dailyv-fulldate-63f0b5.2.1775547733769",
+                                        "DrillDownFilters": []
                                     }
                                 }
                             ]
@@ -322,7 +324,8 @@
                             "ColumnHierarchies": [
                                 {
                                     "DateTimeHierarchy": {
-                                        "HierarchyId": "vw_dailyv-fulldate-63f0b5.0.1775547807374"
+                                        "HierarchyId": "vw_dailyv-fulldate-63f0b5.0.1775547807374",
+                                        "DrillDownFilters": []
                                     }
                                 }
                             ]
@@ -389,7 +392,8 @@
                                     },
                                     "Sparkline": {
                                         "Visibility": "VISIBLE",
-                                        "Type": "AREA"
+                                        "Type": "AREA",
+                                        "TooltipVisibility": "HIDDEN"
                                     },
                                     "VisualLayoutOptions": {
                                         "StandardLayout": {
@@ -513,7 +517,8 @@
                             "ColumnHierarchies": [
                                 {
                                     "DateTimeHierarchy": {
-                                        "HierarchyId": "vw_dailyv-fulldate-22c785.0.1775548486630"
+                                        "HierarchyId": "vw_dailyv-fulldate-22c785.0.1775548486630",
+                                        "DrillDownFilters": []
                                     }
                                 }
                             ]
@@ -633,7 +638,8 @@
                             "ColumnHierarchies": [
                                 {
                                     "DateTimeHierarchy": {
-                                        "HierarchyId": "vw_dailyv-fulldate-22c785.0.1775548665329"
+                                        "HierarchyId": "vw_dailyv-fulldate-22c785.0.1775548665329",
+                                        "DrillDownFilters": []
                                     }
                                 }
                             ]
@@ -779,22 +785,20 @@
                 "FilterGroupId": "17f94c78-1863-4725-914c-69bc8735addf",
                 "Filters": [
                     {
-                        "TimeRangeFilter": {
+                        "RelativeDatesFilter": {
                             "FilterId": "c63c57ba-a55e-454e-a9fb-83351c7ed433",
                             "Column": {
                                 "DataSetIdentifier": "vw_dailyvrh",
                                 "ColumnName": "fulldate"
                             },
-                            "IncludeMinimum": true,
-                            "IncludeMaximum": false,
-                            "RangeMinimumValue": {
-                                "StaticValue": "2026-02-28T16:00:00-08:00"
+                            "AnchorDateConfiguration": {
+                                "AnchorOption": "NOW"
                             },
-                            "RangeMaximumValue": {
-                                "StaticValue": "2026-04-06T17:00:00-07:00"
-                            },
-                            "NullOption": "NON_NULLS_ONLY",
-                            "TimeGranularity": "DAY"
+                            "MinimumGranularity": "DAY",
+                            "TimeGranularity": "DAY",
+                            "RelativeDateType": "LAST",
+                            "RelativeDateValue": 13,
+                            "NullOption": "NON_NULLS_ONLY"
                         }
                     }
                 ],

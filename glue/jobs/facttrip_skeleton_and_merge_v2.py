@@ -57,9 +57,11 @@ Supports:
   --target_date  YYYY-MM-DD           single date (default: yesterday)
   --start_date   YYYY-MM-DD           backfill range start
   --end_date     YYYY-MM-DD           backfill range end
-  --phase        skeleton|merge|both  which phases to run (default: both)
-  --force        re-process already-OPERATED rows in merge phase
-  --timeout      seconds              Redshift poll timeout (default: 900)
+  --phase           skeleton|merge|both  which phases to run (default: both)
+  --force           re-process already-OPERATED rows in merge phase
+  --force_skeleton  DELETE existing FactTrip rows before skeleton insert,
+                    so corrected logic replaces already-inserted rows
+  --timeout         seconds              Redshift poll timeout (default: 900)
 
 Run order dependency:
   DimTrip, DimRoute, DimAgency, DimService, DimDate, DimFeedVersion,
@@ -118,7 +120,7 @@ def resolve_args():
       timeout : int  — Redshift poll timeout in seconds per statement
     """
     args_available = set()
-    for arg in ['start_date', 'end_date', 'target_date', 'phase', 'force', 'timeout']:
+    for arg in ['start_date', 'end_date', 'target_date', 'phase', 'force', 'force_skeleton', 'timeout']:
         try:
             getResolvedOptions(sys.argv, [arg])
             args_available.add(arg)
@@ -132,11 +134,17 @@ def resolve_args():
         if phase not in ('skeleton', 'merge', 'both'):
             raise ValueError(f"--phase must be skeleton | merge | both, got: {phase}")
 
-    # Force flag
+    # Force flag (merge phase)
     force = False
     if 'force' in args_available:
         force_val = getResolvedOptions(sys.argv, ['force'])['force'].lower()
         force = force_val in ('true', '1', 'yes')
+
+    # Force skeleton flag — DELETE existing rows before skeleton insert
+    force_skeleton = False
+    if 'force_skeleton' in args_available:
+        fs_val = getResolvedOptions(sys.argv, ['force_skeleton'])['force_skeleton'].lower()
+        force_skeleton = fs_val in ('true', '1', 'yes')
 
     # Timeout
     timeout = REDSHIFT_POLL_TIMEOUT
@@ -164,7 +172,7 @@ def resolve_args():
         dates.append(current.strftime('%Y-%m-%d'))
         current += timedelta(days=1)
 
-    return {'dates': dates, 'phase': phase, 'force': force, 'timeout': timeout}
+    return {'dates': dates, 'phase': phase, 'force': force, 'force_skeleton': force_skeleton, 'timeout': timeout}
 
 
 # ============================================================
@@ -322,6 +330,23 @@ def preflight_merge(target_date: str, timeout: int):
 # ============================================================
 # Phase 1 — Skeleton Insert SQL
 # ============================================================
+def skeleton_delete_sql(target_date: str) -> str:
+    """
+    Deletes all FactTrip rows for target_date before a forced skeleton
+    re-insert, so corrected logic (e.g. isspecialevent fix) replaces
+    rows that were inserted under old logic.
+
+    Only used when --force_skeleton is passed. Not run by default because
+    the WHERE NOT EXISTS guard makes normal skeleton runs idempotent without
+    touching existing data.
+    """
+    datekey = target_date.replace('-', '')
+    return f"""
+    DELETE FROM dw.FactTrip
+    WHERE datekey = {datekey};
+    """
+
+
 def skeleton_insert_sql(target_date: str) -> str:
     """
     Inserts one FactTrip row per scheduled trip on target_date,
@@ -868,12 +893,18 @@ def validation_sql(target_date: str) -> str:
 # ============================================================
 # Per-date processing
 # ============================================================
-def process_date(target_date: str, phase: str, force: bool, timeout: int):
+def process_date(target_date: str, phase: str, force: bool, force_skeleton: bool, timeout: int):
     print(f"\n{'='*60}")
-    print(f"  DATE: {target_date}  |  phase={phase}  |  force={force}")
+    print(f"  DATE: {target_date}  |  phase={phase}  |  force={force}  |  force_skeleton={force_skeleton}")
     print(f"{'='*60}")
 
     if phase in ('skeleton', 'both'):
+        if force_skeleton:
+            run_sql(
+                skeleton_delete_sql(target_date),
+                description=f"[{target_date}] Phase 1 — Skeleton delete (force_skeleton)",
+                timeout=timeout
+            )
         run_sql(
             skeleton_insert_sql(target_date),
             description=f"[{target_date}] Phase 1 — Skeleton insert",
@@ -923,18 +954,20 @@ def process_date(target_date: str, phase: str, force: bool, timeout: int):
 # Main
 # ============================================================
 def main():
-    config  = resolve_args()
-    dates   = config['dates']
-    phase   = config['phase']
-    force   = config['force']
-    timeout = config['timeout']
+    config         = resolve_args()
+    dates          = config['dates']
+    phase          = config['phase']
+    force          = config['force']
+    force_skeleton = config['force_skeleton']
+    timeout        = config['timeout']
 
     print(f"\n{'='*60}")
     print(f"FACTTRIP SKELETON + MERGE JOB  v2")
-    print(f"  dates   : {dates[0]} → {dates[-1]}  ({len(dates)} day(s))")
-    print(f"  phase   : {phase}")
-    print(f"  force   : {force}")
-    print(f"  timeout : {timeout}s per SQL statement")
+    print(f"  dates          : {dates[0]} → {dates[-1]}  ({len(dates)} day(s))")
+    print(f"  phase          : {phase}")
+    print(f"  force          : {force}")
+    print(f"  force_skeleton : {force_skeleton}")
+    print(f"  timeout        : {timeout}s per SQL statement")
     print(f"{'='*60}")
 
     # Pre-flight check before any skeleton inserts
@@ -945,7 +978,7 @@ def main():
 
     for target_date in dates:
         try:
-            process_date(target_date, phase, force, timeout)
+            process_date(target_date, phase, force, force_skeleton, timeout)
             results['success'].append(target_date)
         except Exception as e:
             print(f"\n  ✗ FAILED [{target_date}]: {e}")

@@ -27,11 +27,13 @@
 #   bash scripts/backload.sh --start_date 2026-03-01 --end_date 2026-03-07 --dry-run
 #
 # Flags:
-#   --start_date DATE   Start of the date range (inclusive, YYYY-MM-DD) [required]
-#   --end_date   DATE   End of the date range (inclusive, YYYY-MM-DD)   [required]
-#   --static-date DATE  Also reload static dims from this staged date
-#   --rt-only           Skip static dims even if --static-date is given
-#   --dry-run           Print Glue job submissions without running them
+#   --start_date DATE    Start of the date range (inclusive, YYYY-MM-DD) [required]
+#   --end_date   DATE    End of the date range (inclusive, YYYY-MM-DD)   [required]
+#   --static-date DATE   Also reload static dims from this staged date
+#   --rt-only            Skip static dims even if --static-date is given
+#   --force-skeleton     DELETE existing FactTrip rows before skeleton insert
+#                        (use after a logic fix to replace already-inserted rows)
+#   --dry-run            Print Glue job submissions without running them
 # =============================================================
 
 set -euo pipefail
@@ -44,15 +46,17 @@ START_DATE=""
 END_DATE=""
 STATIC_DATE=""
 RT_ONLY=false
+FORCE_SKELETON=false
 DRY_RUN=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --start_date)   START_DATE="$2";   shift 2 ;;
-        --end_date)     END_DATE="$2";     shift 2 ;;
-        --static-date)  STATIC_DATE="$2";  shift 2 ;;
-        --rt-only)      RT_ONLY=true;      shift   ;;
-        --dry-run)      DRY_RUN=true;      shift   ;;
+        --start_date)      START_DATE="$2";   shift 2 ;;
+        --end_date)        END_DATE="$2";     shift 2 ;;
+        --static-date)     STATIC_DATE="$2";  shift 2 ;;
+        --rt-only)         RT_ONLY=true;      shift   ;;
+        --force-skeleton)  FORCE_SKELETON=true; shift  ;;
+        --dry-run)         DRY_RUN=true;      shift   ;;
         *) echo "Unknown argument: $1"; exit 1 ;;
     esac
 done
@@ -182,6 +186,7 @@ echo "  Range     : ${START_DATE} → ${END_DATE}  (${N_DAYS} days)"
 [[ -n "${STATIC_DATE}" ]] && ! $RT_ONLY && \
     echo "  Static    : ${STATIC_DATE}"
 echo "  Est. cost : ${COST}"
+echo "  Force skel: ${FORCE_SKELETON}"
 echo "  Dry run   : ${DRY_RUN}"
 echo "========================================================"
 
@@ -225,7 +230,7 @@ fact_pairs+=("factstop-skeleton-and-merge-load:${run_id}")
 info "Submitting facttrip-skeleton-and-merge-load..."
 run_id=$(submit_job 60 "facttrip-skeleton-and-merge-load" \
     "start_date=${START_DATE}" "end_date=${END_DATE}" \
-    "phase=both" "force=false")
+    "phase=both" "force=false" "force_skeleton=${FORCE_SKELETON}")
 info "  Run ID: ${run_id}"
 fact_pairs+=("facttrip-skeleton-and-merge-load:${run_id}")
 

@@ -410,12 +410,18 @@ def skeleton_insert_sql(target_date: str) -> str:
     ),
 
     -- ── Step 3: Special event service_ids ───────────────────────────
-    -- exception_type='1' = service added for a special event day
+    -- A service_id is a genuine special event only if it has NO base
+    -- weekly schedule in stg.calendar (i.e. it exists purely as a
+    -- one-off calendar_dates exception).  Service_ids that also appear
+    -- in stg.calendar are normal scheduled services that happen to use
+    -- exception_type='1' to add dates outside their calendar window or
+    -- on holidays — those must NOT be treated as special events.
     special_event_services AS (
         SELECT cd.service_id
         FROM stg.calendar_dates cd
         WHERE CAST(cd.date AS DATE) = CAST('{target_date}' AS DATE)
           AND cd.exception_type = '1'
+          AND NOT EXISTS (SELECT 1 FROM stg.calendar c WHERE c.service_id = cd.service_id)
     ),
 
     -- ── Step 4: ALL scheduled trips (active + cancelled) ────────────

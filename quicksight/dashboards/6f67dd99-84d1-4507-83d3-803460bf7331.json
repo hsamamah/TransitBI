@@ -19,7 +19,7 @@
                             "Title": {
                                 "Visibility": "VISIBLE",
                                 "FormatText": {
-                                    "RichText": "<visual-title>\n  <inline font-size=\"24px\">\n    <b>Daily OTP Trend</b>\n  </inline>\n  <inline font-size=\"24px\">\n    <b/>\n  </inline>\n</visual-title>"
+                                    "RichText": "<visual-title>\n  <inline font-size=\"24px\">\n    <b>Daily OTP Trend</b>\n  </inline>\n  <inline font-size=\"24px\"/>\n</visual-title>"
                                 }
                             },
                             "Subtitle": {
@@ -130,7 +130,8 @@
                             "ColumnHierarchies": [
                                 {
                                     "DateTimeHierarchy": {
-                                        "HierarchyId": "new_custo-fulldate-389063.0.1775532672967"
+                                        "HierarchyId": "new_custo-fulldate-389063.0.1775532672967",
+                                        "DrillDownFilters": []
                                     }
                                 }
                             ]
@@ -238,7 +239,8 @@
                             "ColumnHierarchies": [
                                 {
                                     "DateTimeHierarchy": {
-                                        "HierarchyId": "new_custo-fulldate-389063.0.1775532752859"
+                                        "HierarchyId": "new_custo-fulldate-389063.0.1775532752859",
+                                        "DrillDownFilters": []
                                     }
                                 }
                             ]

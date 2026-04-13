@@ -55,6 +55,8 @@ quicksight/
 | 5 | Deploy analyses from `quicksight/analyses/*.json` |
 | 6 | Deploy dashboards from `quicksight/dashboards/*.json` |
 
+**Daily refresh schedules** are managed separately via `--setup-schedules`. This configures QuickSight's native SPICE refresh scheduler to run a full dataset refresh every day at **07:00 America/Los_Angeles** — no external cron or Lambda needed. Run once after initial deploy; schedules persist in AWS.
+
 ```bash
 # Full deploy — upserts data source, all 6 datasets, analyses, dashboards; triggers SPICE refresh
 bash deploy/deploy_quicksight.sh
@@ -62,8 +64,11 @@ bash deploy/deploy_quicksight.sh
 # Dry run — print actions without executing
 bash deploy/deploy_quicksight.sh --dry-run
 
-# SPICE refresh only
+# SPICE refresh only (one-time, manual)
 bash deploy/deploy_quicksight.sh --refresh-only
+
+# Configure daily 07:00 PT SPICE refresh schedules on all 6 datasets (run once)
+bash deploy/deploy_quicksight.sh --setup-schedules
 
 # Export current AWS state → quicksight/ JSON files
 bash deploy/deploy_quicksight.sh --export

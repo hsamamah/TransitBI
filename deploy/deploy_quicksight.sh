@@ -9,10 +9,11 @@
 # team members full folder access.
 #
 # Usage:
-#   bash deploy/deploy_quicksight.sh              # full deploy
-#   bash deploy/deploy_quicksight.sh --dry-run    # print actions only
-#   bash deploy/deploy_quicksight.sh --refresh-only # SPICE refresh only
-#   bash deploy/deploy_quicksight.sh --export     # export analyses + dashboard → quicksight/
+#   bash deploy/deploy_quicksight.sh                  # full deploy
+#   bash deploy/deploy_quicksight.sh --dry-run        # print actions only
+#   bash deploy/deploy_quicksight.sh --refresh-only   # SPICE refresh only
+#   bash deploy/deploy_quicksight.sh --setup-schedules # configure daily 07:00 PT refresh schedules
+#   bash deploy/deploy_quicksight.sh --export         # export analyses + dashboard → quicksight/
 #
 # Resources managed:
 #   Data source : seattle-transit-dw  (Redshift Serverless via VPC)
@@ -41,11 +42,13 @@ set -a; source "${SCRIPT_DIR}/config.env"; set +a
 DRY_RUN=false
 REFRESH_ONLY=false
 EXPORT_ONLY=false
+SETUP_SCHEDULES=false
 for arg in "$@"; do
     case $arg in
-        --dry-run)      DRY_RUN=true      ;;
-        --refresh-only) REFRESH_ONLY=true ;;
-        --export)       EXPORT_ONLY=true  ;;
+        --dry-run)         DRY_RUN=true         ;;
+        --refresh-only)    REFRESH_ONLY=true    ;;
+        --export)          EXPORT_ONLY=true     ;;
+        --setup-schedules) SETUP_SCHEDULES=true ;;
     esac
 done
 
@@ -120,6 +123,69 @@ if $EXPORT_ONLY; then
     exit 0
 fi
 
+# --setup-schedules: configure a daily 07:00 PT SPICE refresh on each dataset and exit
+if $SETUP_SCHEDULES; then
+    log "=== [schedule] Configuring daily SPICE refresh schedules (07:00 America/Los_Angeles) ==="
+
+    SCHEDULE_DATASETS=(
+        "vw_otp_by_route_month:61f642a5-d9a8-4d26-b485-73f5d5615069"
+        "v_routes_consistently_late:6dbda19e-5a0c-4d02-a9fe-89b0dafecc60"
+        "vw_dailyvrm:c0894c19-2b88-448a-883a-ce164057421e"
+        "v_voms:f866df43-50a4-492d-92f1-14901dee795d"
+        "vw_dailyvrh:2ade677c-c1c3-4f1f-ad94-a2d24fa66421"
+        "v_missed_trip_rate_by_route:3eac6ed8-921c-4584-be0c-3a6a8c377027"
+    )
+
+    SCHEDULE_JSON='{
+        "ScheduleId": "daily-morning-pt",
+        "ScheduleFrequency": {
+            "Interval": "DAILY",
+            "TimeOfTheDay": "07:00",
+            "Timezone": "America/Los_Angeles"
+        },
+        "RefreshType": "FULL_REFRESH"
+    }'
+
+    for entry in "${SCHEDULE_DATASETS[@]}"; do
+        view_name="${entry%%:*}"
+        dataset_id="${entry##*:}"
+
+        if $DRY_RUN; then
+            dry "UPSERT refresh schedule daily-morning-pt → ${view_name}"
+            continue
+        fi
+
+        # Try create first; if the schedule already exists, update it instead
+        CREATE_ERR=$(aws quicksight create-refresh-schedule \
+                --aws-account-id "${QS_ACCOUNT}" \
+                --data-set-id "${dataset_id}" \
+                --schedule "${SCHEDULE_JSON}" \
+                --region "${REGION}" 2>&1) && CREATE_RC=0 || CREATE_RC=$?
+        if [[ $CREATE_RC -eq 0 ]]; then
+            ok "Created refresh schedule: ${view_name} — daily 07:00 PT"
+        elif echo "${CREATE_ERR}" | grep -q "not a SPICE dataset"; then
+            warn "Skipped ${view_name} — Direct Query mode (no SPICE refresh needed)"
+        else
+            ERR=$(aws quicksight update-refresh-schedule \
+                    --aws-account-id "${QS_ACCOUNT}" \
+                    --data-set-id "${dataset_id}" \
+                    --schedule "${SCHEDULE_JSON}" \
+                    --region "${REGION}" 2>&1) && UPDATE_RC=0 || UPDATE_RC=$?
+            if [[ $UPDATE_RC -eq 0 ]]; then
+                ok "Updated refresh schedule: ${view_name} — daily 07:00 PT"
+            elif echo "${ERR}" | grep -q "not a SPICE dataset"; then
+                warn "Skipped ${view_name} — Direct Query mode (no SPICE refresh needed)"
+            else
+                warn "Failed to set refresh schedule: ${view_name} — ${ERR}"
+            fi
+        fi
+    done
+
+    log "=== Schedule setup complete ==="
+    if [[ $DRY_RUN == true ]]; then warn "DRY-RUN — no changes applied"; fi
+    exit 0
+fi
+
 # ── QuickSight resource IDs ───────────────────────────────────
 DATASOURCE_ID="ee6148c5-7ba2-45b8-b4a5-c721e9ab7aca"
 QS_PRINCIPAL="arn:aws:quicksight:${REGION}:${QS_ACCOUNT}:user/default/${QS_ACCOUNT}"
@@ -191,6 +257,7 @@ DATASET_ORDER=(
     "v_voms"
     "vw_dailyvrh"
     "v_missed_trip_rate_by_route"
+    "v_daily_otp_summary"
 )
 
 # Dataset IDs — stable UUIDs matching the live resources
@@ -201,6 +268,7 @@ declare -A DATASET_IDS=(
   ["v_voms"]="f866df43-50a4-492d-92f1-14901dee795d"
   ["vw_dailyvrh"]="2ade677c-c1c3-4f1f-ad94-a2d24fa66421"
   ["v_missed_trip_rate_by_route"]="3eac6ed8-921c-4584-be0c-3a6a8c377027"
+  ["v_daily_otp_summary"]="d1a1ly0t-p5um-4ary-0000-transit-bi-dw"
 )
 
 qs_datasource_exists() {
@@ -573,22 +641,36 @@ if ! $REFRESH_ONLY; then
                 --dashboard-id "${dashboard_id}" \
                 --region "${REGION}" > /dev/null 2>&1; then
 
-            aws quicksight update-dashboard \
+            new_version=$(aws quicksight update-dashboard \
                 --aws-account-id "${QS_ACCOUNT}" \
                 --dashboard-id "${dashboard_id}" \
                 --name "${dashboard_name}" \
                 --definition "${definition}" \
+                --region "${REGION}" \
+                --query 'VersionArn' --output text | grep -o '[0-9]*$')
+            ok "Updated dashboard: ${dashboard_name} (version ${new_version})"
+            aws quicksight update-dashboard-published-version \
+                --aws-account-id "${QS_ACCOUNT}" \
+                --dashboard-id "${dashboard_id}" \
+                --version-number "${new_version}" \
                 --region "${REGION}" > /dev/null
-            ok "Updated dashboard: ${dashboard_name}"
+            ok "Published dashboard version ${new_version}: ${dashboard_name}"
         else
-            aws quicksight create-dashboard \
+            new_version=$(aws quicksight create-dashboard \
                 --aws-account-id "${QS_ACCOUNT}" \
                 --dashboard-id "${dashboard_id}" \
                 --name "${dashboard_name}" \
                 --definition "${definition}" \
                 --permissions "[{\"Principal\": \"${QS_PRINCIPAL}\", \"Actions\": [\"quicksight:DescribeDashboard\",\"quicksight:ListDashboardVersions\",\"quicksight:UpdateDashboardPermissions\",\"quicksight:QueryDashboard\",\"quicksight:UpdateDashboard\",\"quicksight:DeleteDashboard\",\"quicksight:UpdateDashboardPublishedVersion\",\"quicksight:DescribeDashboardPermissions\"]}]" \
+                --region "${REGION}" \
+                --query 'VersionArn' --output text | grep -o '[0-9]*$')
+            ok "Created dashboard: ${dashboard_name} (version ${new_version})"
+            aws quicksight update-dashboard-published-version \
+                --aws-account-id "${QS_ACCOUNT}" \
+                --dashboard-id "${dashboard_id}" \
+                --version-number "${new_version}" \
                 --region "${REGION}" > /dev/null
-            ok "Created dashboard: ${dashboard_name}"
+            ok "Published dashboard version ${new_version}: ${dashboard_name}"
         fi
 
         # Add to shared folder (idempotent — suppress AlreadyExists)
